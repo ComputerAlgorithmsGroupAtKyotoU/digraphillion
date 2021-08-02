@@ -6,6 +6,8 @@
 
 ## how to test
 
+- `pytest -rsfp`
+
 ## References
 
 - [TdZdd](https://github.com/kunisura/TdZdd)
