@@ -3,6 +3,7 @@
 
 #include <assert.h>
 
+#include <map>
 #include <set>
 
 #include "digraphillion/type.h"

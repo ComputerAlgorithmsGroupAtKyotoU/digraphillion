@@ -9,7 +9,9 @@
 #include <string>
 #include <vector>
 
+#include "digraphillion/graphset.h"
 #include "py3c.h"
+#include "py3c/tpflags.h"
 
 #define PyString_AsString PyUnicode_AsUTF8
 
@@ -28,7 +30,7 @@
   do {                                                        \
     PySetsetObject* _ret = reinterpret_cast<PySetsetObject*>( \
         Py_TYPE(self)->tp_alloc(Py_TYPE(self), 0));           \
-    _ret->ss = new setset(expr);                              \
+    _ret->ss = new digraphillion::setset(expr);               \
     return reinterpret_cast<PyObject*>(_ret);                 \
   } while (0);
 
@@ -38,7 +40,7 @@
     PySetsetObject* _ret = reinterpret_cast<PySetsetObject*>(           \
         Py_TYPE(self)->tp_alloc(Py_TYPE(self), 0));                     \
     if (_ret == NULL) return NULL;                                      \
-    _ret->ss = new setset(expr);                                        \
+    _ret->ss = new digraphillion::setset(expr);                         \
     return reinterpret_cast<PyObject*>(_ret);                           \
   } while (0);
 
@@ -95,9 +97,9 @@ int PyFile_Check(PyObject* obj) { return PyObject_AsFileDescriptor(obj); }
 
 #endif
 
-static PyObject* setset_build_set(const set<int>& s) {
+static PyObject* setset_build_set(const std::set<int>& s) {
   PyObject* so = PySet_New(NULL);
-  for (set<int>::const_iterator e = s.begin(); e != s.end(); ++e) {
+  for (std::set<int>::const_iterator e = s.begin(); e != s.end(); ++e) {
     PyObject* eo = PyInt_FromLong(*e);
     if (eo == NULL) {
       PyErr_SetString(PyExc_TypeError, "not int set");
@@ -114,7 +116,7 @@ static PyObject* setset_build_set(const set<int>& s) {
   return so;
 }
 
-static int setset_parse_set(PyObject* so, set<int>* s) {
+static int setset_parse_set(PyObject* so, std::set<int>* s) {
   assert(s != NULL);
   PyObject* i = PyObject_GetIter(so);
   if (i == NULL) return -1;
@@ -132,22 +134,24 @@ static int setset_parse_set(PyObject* so, set<int>* s) {
   return 0;
 }
 
-static vector<int> intersection(const map<string, vector<int> >& m,
-                                const string& key1, const string& key2) {
-  map<string, vector<int> >::const_iterator in_i = m.find(key1);
-  map<string, vector<int> >::const_iterator ex_i = m.find(key2);
-  vector<int> in_v = in_i != m.end() ? in_i->second : vector<int>();
-  vector<int> ex_v = ex_i != m.end() ? ex_i->second : vector<int>();
+static std::vector<int> intersection(
+    const std::map<std::string, std::vector<int> >& m, const std::string& key1,
+    const std::string& key2) {
+  std::map<std::string, std::vector<int> >::const_iterator in_i = m.find(key1);
+  std::map<std::string, std::vector<int> >::const_iterator ex_i = m.find(key2);
+  std::vector<int> in_v = in_i != m.end() ? in_i->second : std::vector<int>();
+  std::vector<int> ex_v = ex_i != m.end() ? ex_i->second : std::vector<int>();
   std::sort(in_v.begin(), in_v.end());
   std::sort(ex_v.begin(), ex_v.end());
-  vector<int> v(std::max(in_v.size(), ex_v.size()));
-  vector<int>::const_iterator end = std::set_intersection(
+  std::vector<int> v(std::max(in_v.size(), ex_v.size()));
+  std::vector<int>::const_iterator end = std::set_intersection(
       in_v.begin(), in_v.end(), ex_v.begin(), ex_v.end(), v.begin());
   v.resize(end - v.begin());
   return v;
 }
 
-static int setset_parse_map(PyObject* dict_obj, map<string, vector<int> >* m) {
+static int setset_parse_map(PyObject* dict_obj,
+                            std::map<std::string, std::vector<int> >* m) {
   assert(m != NULL);
   PyObject* key_obj;
   PyObject* lo;
@@ -157,14 +161,14 @@ static int setset_parse_map(PyObject* dict_obj, map<string, vector<int> >* m) {
       PyErr_SetString(PyExc_TypeError, "invalid argument");
       return -1;
     }
-    string key = PyString_AsString(key_obj);
+    std::string key = PyString_AsString(key_obj);
     if (key != "include" && key != "exclude") {
       PyErr_SetString(PyExc_TypeError, "invalid dict key");
       return -1;
     }
     PyObject* i = PyObject_GetIter(lo);
     if (i == NULL) return -1;
-    vector<int> v;
+    std::vector<int> v;
     PyObject* eo;
     while ((eo = PyIter_Next(i))) {
       if (!PyInt_Check(eo)) {
@@ -188,7 +192,7 @@ static int setset_parse_map(PyObject* dict_obj, map<string, vector<int> >* m) {
 // setset::iterator
 
 typedef struct {
-  PyObject_HEAD setset::iterator* it;
+  PyObject_HEAD digraphillion::setset::iterator* it;
 } PySetsetIterObject;
 
 static PyObject* setsetiter_new(PyTypeObject* type, PyObject* args,
@@ -205,8 +209,8 @@ static void setsetiter_dealloc(PySetsetIterObject* self) {
 }
 
 static PyObject* setsetiter_next(PySetsetIterObject* self) {
-  if (*(self->it) == setset::end()) return NULL;
-  set<int> s = *(*self->it);
+  if (*(self->it) == digraphillion::setset::end()) return NULL;
+  std::set<int> s = *(*self->it);
   ++(*self->it);
   return setset_build_set(s);
 }
@@ -282,31 +286,31 @@ static int setset_init(PySetsetObject* self, PyObject* args, PyObject* kwds) {
   PyObject* obj = NULL;
   if (!PyArg_ParseTuple(args, "|O", &obj)) return -1;
   if (obj == NULL || obj == Py_None) {
-    self->ss = new setset();
+    self->ss = new digraphillion::setset();
   } else if (PySetset_Check(obj)) {
     PySetsetObject* sso = reinterpret_cast<PySetsetObject*>(obj);
-    self->ss = new setset(*(sso->ss));
+    self->ss = new digraphillion::setset(*(sso->ss));
   } else if (PyList_Check(obj)) {
     PyObject* i = PyObject_GetIter(obj);
     if (i == NULL) return -1;
-    vector<set<int> > vs;
+    std::vector<std::set<int> > vs;
     PyObject* o;
     while ((o = PyIter_Next(i))) {
       if (!PyAnySet_Check(o)) {
         PyErr_SetString(PyExc_TypeError, "not set");
         return -1;
       }
-      set<int> s;
+      std::set<int> s;
       if (setset_parse_set(o, &s) == -1) return -1;
       vs.push_back(s);
       Py_DECREF(o);
     }
     Py_DECREF(i);
-    self->ss = new setset(vs);
+    self->ss = new digraphillion::setset(vs);
   } else if (PyDict_Check(obj)) {
-    map<string, vector<int> > m;
+    std::map<std::string, std::vector<int> > m;
     if (setset_parse_map(obj, &m) == -1) return -1;
-    self->ss = new setset(m);
+    self->ss = new digraphillion::setset(m);
   } else {
     PyErr_SetString(PyExc_TypeError, "invalid argumet");
     return -1;
@@ -463,9 +467,9 @@ static PyObject* setset_len2(PySetsetObject* self, PyObject* args) {
   PyObject* obj = NULL;
   if (!PyArg_ParseTuple(args, "|O", &obj)) return NULL;
   if (obj == NULL || obj == Py_None) {
-    string size = self->ss->size();
-    vector<char> buf;
-    for (string::const_iterator c = size.begin(); c != size.end(); ++c)
+    std::string size = self->ss->size();
+    std::vector<char> buf;
+    for (std::string::const_iterator c = size.begin(); c != size.end(); ++c)
       buf.push_back(*c);
     buf.push_back('\0');
     return PyLong_FromString(buf.data(), NULL, 0);
@@ -482,7 +486,7 @@ static PyObject* setset_iter(PySetsetObject* self) {
   PySetsetIterObject* ssi =
       PyObject_New(PySetsetIterObject, &PySetsetIter_Type);
   if (ssi == NULL) return NULL;
-  ssi->it = new setset::iterator(self->ss->begin());
+  ssi->it = new digraphillion::setset::iterator(self->ss->begin());
   if (ssi->it == NULL) {
     PyErr_NoMemory();
     return NULL;
@@ -494,7 +498,8 @@ static PyObject* setset_rand_iter(PySetsetObject* self) {
   PySetsetIterObject* ssi =
       PyObject_New(PySetsetIterObject, &PySetsetIter_Type);
   if (ssi == NULL) return NULL;
-  ssi->it = new setset::random_iterator(self->ss->begin_randomly());
+  ssi->it =
+      new digraphillion::setset::random_iterator(self->ss->begin_randomly());
   if (ssi->it == NULL) {
     PyErr_NoMemory();
     return NULL;
@@ -507,7 +512,7 @@ static PyObject* setset_optimize(PySetsetObject* self, PyObject* weights,
   PyObject* i = PyObject_GetIter(weights);
   if (i == NULL) return NULL;
   PyObject* eo;
-  vector<double> w;
+  std::vector<double> w;
   while ((eo = PyIter_Next(i))) {
     if (PyFloat_Check(eo)) {
       w.push_back(PyFloat_AsDouble(eo));
@@ -526,9 +531,9 @@ static PyObject* setset_optimize(PySetsetObject* self, PyObject* weights,
   PySetsetIterObject* ssi =
       PyObject_New(PySetsetIterObject, &PySetsetIter_Type);
   if (ssi == NULL) return NULL;
-  ssi->it = new setset::weighted_iterator(is_maximizing
-                                              ? self->ss->begin_from_max(w)
-                                              : self->ss->begin_from_min(w));
+  ssi->it = new digraphillion::setset::weighted_iterator(
+      is_maximizing ? self->ss->begin_from_max(w)
+                    : self->ss->begin_from_min(w));
   if (ssi->it == NULL) {
     PyErr_NoMemory();
     return NULL;
@@ -548,12 +553,12 @@ static PyObject* setset_min_iter(PySetsetObject* self, PyObject* weights) {
 // return -1.
 static int setset_contains(PySetsetObject* self, PyObject* obj) {
   if (PyAnySet_Check(obj)) {
-    set<int> s;
+    std::set<int> s;
     if (setset_parse_set(obj, &s) == -1) return -1;
     return self->ss->find(s) != self->ss->end() ? 1 : 0;
   } else if (PyInt_Check(obj)) {
     int e = PyLong_AsLong(obj);
-    return self->ss->supersets(e) != setset() ? 1 : 0;
+    return self->ss->supersets(e) != digraphillion::setset() ? 1 : 0;
   } else {
     PyErr_SetString(PyExc_TypeError, "not set nor int");
     return -1;
@@ -562,7 +567,7 @@ static int setset_contains(PySetsetObject* self, PyObject* obj) {
 
 static PyObject* setset_add(PySetsetObject* self, PyObject* obj) {
   if (PyAnySet_Check(obj)) {
-    set<int> s;
+    std::set<int> s;
     if (setset_parse_set(obj, &s) == -1) return NULL;
     self->ss->insert(s);
   } else if (PyInt_Check(obj)) {
@@ -577,7 +582,7 @@ static PyObject* setset_add(PySetsetObject* self, PyObject* obj) {
 
 static PyObject* setset_remove(PySetsetObject* self, PyObject* obj) {
   if (PyAnySet_Check(obj)) {
-    set<int> s;
+    std::set<int> s;
     if (setset_parse_set(obj, &s) == -1) return NULL;
     if (self->ss->erase(s) == 0) {
       PyErr_SetString(PyExc_KeyError, "not found");
@@ -600,7 +605,7 @@ static PyObject* setset_remove(PySetsetObject* self, PyObject* obj) {
 
 static PyObject* setset_discard(PySetsetObject* self, PyObject* obj) {
   if (PyAnySet_Check(obj)) {
-    set<int> s;
+    std::set<int> s;
     if (setset_parse_set(obj, &s) == -1) return NULL;
     self->ss->erase(s);
   } else if (PyInt_Check(obj)) {
@@ -614,12 +619,12 @@ static PyObject* setset_discard(PySetsetObject* self, PyObject* obj) {
 }
 
 static PyObject* setset_pop(PySetsetObject* self) {
-  setset::iterator i = self->ss->begin();
+  digraphillion::setset::iterator i = self->ss->begin();
   if (i == self->ss->end()) {
     PyErr_SetString(PyExc_KeyError, "'pop' from an empty set");
     return NULL;
   }
-  set<int> s = *i;
+  std::set<int> s = *i;
   self->ss->erase(s);
   return setset_build_set(s);
 }
@@ -731,12 +736,12 @@ static PyObject* setset_non_supersets(PySetsetObject* self, PyObject* obj) {
 }
 
 static PyObject* setset_choice(PySetsetObject* self) {
-  setset::iterator i = self->ss->begin();
+  digraphillion::setset::iterator i = self->ss->begin();
   if (i == self->ss->end()) {
     PyErr_SetString(PyExc_KeyError, "'choice' from an empty set");
     return NULL;
   }
-  set<int> s = *i;
+  std::set<int> s = *i;
   return setset_build_set(s);
 }
 
@@ -745,7 +750,7 @@ static PyObject* setset_probability(PySetsetObject* self,
   PyObject* i = PyObject_GetIter(probabilities);
   if (i == NULL) return NULL;
   PyObject* eo;
-  vector<double> p;
+  std::vector<double> p;
   while ((eo = PyIter_Next(i))) {
     if (PyFloat_Check(eo)) {
       p.push_back(PyFloat_AsDouble(eo));
@@ -785,11 +790,12 @@ static PyObject* setset_dump(PySetsetObject* self, PyObject* obj) {
   Py_RETURN_NONE;
 }
 
-static PyObject* setset_dumps(PySetsetObject* self) {
-  stringstream sstr;
-  self->ss->dump(sstr);
-  return PyStr_FromString(sstr.str().c_str());
-}
+//TODO
+//static PyObject* setset_dumps(PySetsetObject* self) {
+//  std::stringstream sstr;
+//  self->ss->dump(sstr);
+//  return PyStr_FromString(sstr.str().c_str());
+//}
 
 static PyObject* setset_load(PySetsetObject* self, PyObject* obj) {
   CHECK_OR_ERROR(obj, PyFile_Check, "file", NULL);
@@ -805,7 +811,7 @@ static PyObject* setset_load(PySetsetObject* self, PyObject* obj) {
   Py_BEGIN_ALLOW_THREADS;
   ret = reinterpret_cast<PySetsetObject*>(
       PySetset_Type.tp_alloc(&PySetset_Type, 0));
-  ret->ss = new setset(setset::load(fp));
+  ret->ss = new digraphillion::setset(digraphillion::setset::load(fp));
   Py_END_ALLOW_THREADS;
 #if IS_PY3 == 1
   fclose(fp);
@@ -815,14 +821,15 @@ static PyObject* setset_load(PySetsetObject* self, PyObject* obj) {
   return reinterpret_cast<PyObject*>(ret);
 }
 
-static PyObject* setset_loads(PySetsetObject* self, PyObject* obj) {
-  CHECK_OR_ERROR(obj, PyStr_Check, "str", NULL);
-  stringstream sstr(PyStr_AsString(obj));
-  PySetsetObject* ret = reinterpret_cast<PySetsetObject*>(
-      PySetset_Type.tp_alloc(&PySetset_Type, 0));
-  ret->ss = new setset(setset::load(sstr));
-  return reinterpret_cast<PyObject*>(ret);
-}
+//TODO
+//static PyObject* setset_loads(PySetsetObject* self, PyObject* obj) {
+//  CHECK_OR_ERROR(obj, PyStr_Check, "str", NULL);
+//  std::stringstream sstr(PyStr_AsString(obj));
+//  PySetsetObject* ret = reinterpret_cast<PySetsetObject*>(
+//      PySetset_Type.tp_alloc(&PySetset_Type, 0));
+//  ret->ss = new digraphillion::setset(digraphillion::setset::load(sstr));
+//  return reinterpret_cast<PyObject*>(ret);
+//}
 
 static PyObject* setset_enum(PySetsetObject* self, PyObject* obj) {
   CHECK_OR_ERROR(obj, PyFile_Check, "file", NULL);
@@ -835,7 +842,7 @@ static PyObject* setset_enum(PySetsetObject* self, PyObject* obj) {
   PyFile_IncUseCount(file);
 #endif
   Py_BEGIN_ALLOW_THREADS;
-  string name = Py_TYPE(self)->tp_name;
+  std::string name = Py_TYPE(self)->tp_name;
   self->ss->_enum(fp, std::make_pair((name + "([").c_str(), "])"),
                   std::make_pair("set([", "])"));
   Py_END_ALLOW_THREADS;
@@ -845,13 +852,14 @@ static PyObject* setset_enum(PySetsetObject* self, PyObject* obj) {
   Py_RETURN_NONE;
 }
 
-static PyObject* setset_enums(PySetsetObject* self) {
-  stringstream sstr;
-  string name = Py_TYPE(self)->tp_name;
-  self->ss->_enum(sstr, std::make_pair((name + "([").c_str(), "])"),
-                  std::make_pair("set([", "])"));
-  return PyStr_FromString(sstr.str().c_str());
-}
+//TODO
+//static PyObject* setset_enums(PySetsetObject* self) {
+//  std::stringstream sstr;
+//  std::string name = Py_TYPE(self)->tp_name;
+//  self->ss->_enum(sstr, std::make_pair((name + "([").c_str(), "])"),
+//                  std::make_pair("set([", "])"));
+//  return PyStr_FromString(sstr.str().c_str());
+//}
 
 static PyObject* setset_repr(PySetsetObject* self) {
   return PyStr_FromFormat("<%s object of %p>", Py_TYPE(self)->tp_name,
@@ -916,9 +924,10 @@ static PyObject* setset_richcompare(PySetsetObject* self, PyObject* obj,
   return Py_NotImplemented;
 }
 
-static PyMemberDef setset_members[] = {
-    {NULL} /* Sentinel */
-};
+//TODO
+//static PyMemberDef setset_members[] = {
+//    {NULL} /* Sentinel */
+//};
 
 static PyMethodDef setset_methods[] = {
     {"copy", reinterpret_cast<PyCFunction>(setset_copy), METH_NOARGS, ""},
@@ -984,9 +993,9 @@ static PyMethodDef setset_methods[] = {
     {"probability", reinterpret_cast<PyCFunction>(setset_probability), METH_O,
      ""},
     {"dump", reinterpret_cast<PyCFunction>(setset_dump), METH_O, ""},
-    {"dumps", reinterpret_cast<PyCFunction>(setset_dumps), METH_NOARGS, ""},
-    {"_enum", reinterpret_cast<PyCFunction>(setset_enum), METH_O, ""},
-    {"_enums", reinterpret_cast<PyCFunction>(setset_enums), METH_NOARGS, ""},
+//    {"dumps", reinterpret_cast<PyCFunction>(setset_dumps), METH_NOARGS, ""},
+//    {"_enum", reinterpret_cast<PyCFunction>(setset_enum), METH_O, ""},
+//    {"_enums", reinterpret_cast<PyCFunction>(setset_enums), METH_NOARGS, ""},
     {NULL} /* Sentinel */
 };
 
@@ -1102,7 +1111,7 @@ __declspec(dllexport)
         0,                                       /* tp_iter */
         0,                                       /* tp_iternext */
         setset_methods,                          /* tp_methods */
-        setset_members,                          /* tp_members */
+        0, //setset_members,                          /* tp_members */
         0,                                       /* tp_getset */
         0,                                       /* tp_base */
         0,                                       /* tp_dict */
@@ -1126,201 +1135,22 @@ __declspec(dllexport)
 };
 
 static PyObject* setset_elem_limit(PyObject*) {
-  return PyInt_FromLong(setset::elem_limit());
+  return PyInt_FromLong(digraphillion::setset::elem_limit());
 }
 
 static PyObject* setset_num_elems(PyObject*, PyObject* args) {
   PyObject* obj = NULL;
   if (!PyArg_ParseTuple(args, "|O", &obj)) return NULL;
   if (obj == NULL) {
-    return PyInt_FromLong(setset::num_elems());
+    return PyInt_FromLong(digraphillion::setset::num_elems());
   } else {
-    setset::num_elems(PyInt_AsLong(obj));
+    digraphillion::setset::num_elems(PyInt_AsLong(obj));
     Py_RETURN_NONE;
   }
 }
 
-static PyObject* graphset_graphs(PyObject*, PyObject* args, PyObject* kwds) {
-  static char s1[] = "graph";
-  static char s2[] = "vertex_groups";
-  static char s3[] = "degree_constraints";
-  static char s4[] = "num_edges";
-  static char s5[] = "num_comps";
-  static char s6[] = "no_loop";
-  static char s7[] = "search_space";
-  static char s8[] = "linear_constraints";
-  static char* kwlist[9] = {s1, s2, s3, s4, s5, s6, s7, s8, NULL};
-  PyObject* graph_obj = NULL;
-  PyObject* vertex_groups_obj = NULL;
-  PyObject* degree_constraints_obj = NULL;
-  PyObject* num_edges_obj = NULL;
-  int num_comps = -1, no_loop = 0;
-  PyObject* search_space_obj = NULL;
-  PyObject* linear_constraints_obj = NULL;
-  if (!PyArg_ParseTupleAndKeywords(args, kwds, "O|OOOiiOO", kwlist, &graph_obj,
-                                   &vertex_groups_obj, &degree_constraints_obj,
-                                   &num_edges_obj, &num_comps, &no_loop,
-                                   &search_space_obj, &linear_constraints_obj))
-    return NULL;
-
-  vector<pair<string, string> > graph;
-  if (graph_obj == NULL || graph_obj == Py_None) {
-    PyErr_SetString(PyExc_TypeError, "no graph");
-    return NULL;
-  }
-  PyObject* i = PyObject_GetIter(graph_obj);
-  if (i == NULL) return NULL;
-  PyObject* eo;
-  while ((eo = PyIter_Next(i))) {
-    PyObject* j = PyObject_GetIter(eo);
-    if (j == NULL) return NULL;
-    vector<string> e;
-    PyObject* vo;
-    while ((vo = PyIter_Next(j))) {
-      if (!PyBytes_Check(vo)) {
-        PyErr_SetString(PyExc_TypeError, "invalid graph");
-        return NULL;
-      }
-      string v = PyBytes_AsString(vo);
-      if (v.find(',') != string::npos) {
-        PyErr_SetString(PyExc_TypeError, "invalid vertex in the graph");
-        return NULL;
-      }
-      e.push_back(v);
-    }
-    assert(e.size() == 2);
-    graph.push_back(make_pair(e[0], e[1]));
-  }
-
-  vector<vector<string> > vertex_groups_entity;
-  vector<vector<string> >* vertex_groups = NULL;
-  if (vertex_groups_obj != NULL && vertex_groups_obj != Py_None) {
-    vertex_groups = &vertex_groups_entity;
-    PyObject* i = PyObject_GetIter(vertex_groups_obj);
-    if (i == NULL) return NULL;
-    PyObject* uo;
-    while ((uo = PyIter_Next(i))) {
-      PyObject* j = PyObject_GetIter(uo);
-      if (j == NULL) return NULL;
-      vector<string> v;
-      PyObject* vo;
-      while ((vo = PyIter_Next(j))) {
-        if (!PyBytes_Check(vo)) {
-          PyErr_SetString(PyExc_TypeError, "invalid vertex groups");
-          return NULL;
-        }
-        string vertex = PyBytes_AsString(vo);
-        v.push_back(vertex);
-      }
-      vertex_groups->push_back(v);
-    }
-  }
-
-  map<string, Range> degree_constraints_entity;
-  map<string, Range>* degree_constraints = NULL;
-  if (degree_constraints_obj != NULL && degree_constraints_obj != Py_None) {
-    degree_constraints = &degree_constraints_entity;
-    PyObject* vo;
-    PyObject* lo;
-    Py_ssize_t pos = 0;
-    while (PyDict_Next(degree_constraints_obj, &pos, &vo, &lo)) {
-      if (!PyBytes_Check(vo)) {
-        PyErr_SetString(PyExc_TypeError,
-                        "invalid vertex in degree constraints");
-        return NULL;
-      }
-      string vertex = PyBytes_AsString(vo);
-      PyObject* i = PyObject_GetIter(lo);
-      if (i == NULL) return NULL;
-      vector<int> r;
-      PyObject* io;
-      while ((io = PyIter_Next(i))) {
-        if (!PyInt_Check(io)) {
-          Py_DECREF(io);
-          PyErr_SetString(PyExc_TypeError,
-                          "invalid degree in degree constraints");
-          return NULL;
-        }
-        r.push_back(PyInt_AsLong(io));
-      }
-      (*degree_constraints)[vertex] = Range(r[0], r[1], r[2]);
-    }
-  }
-
-  Range num_edges_entity;
-  Range* num_edges = NULL;
-  if (num_edges_obj != NULL && num_edges_obj != Py_None) {
-    num_edges = &num_edges_entity;
-    vector<int> r;
-    PyObject* i = PyObject_GetIter(num_edges_obj);
-    PyObject* io;
-    while ((io = PyIter_Next(i))) {
-      if (!PyInt_Check(io)) {
-        Py_DECREF(io);
-        PyErr_SetString(PyExc_TypeError, "invalid number of edges");
-        return NULL;
-      }
-      r.push_back(PyInt_AsLong(io));
-    }
-    *num_edges = Range(r[0], r[1], r[2]);
-  }
-
-  setset* search_space = NULL;
-  if (search_space_obj != NULL && search_space_obj != Py_None)
-    search_space = reinterpret_cast<PySetsetObject*>(search_space_obj)->ss;
-
-  vector<linear_constraint_t> linear_constraints_entity;
-  vector<linear_constraint_t>* linear_constraints = NULL;
-  if (linear_constraints_obj != NULL && linear_constraints_obj != Py_None) {
-    linear_constraints = &linear_constraints_entity;
-    PyObject* i = PyObject_GetIter(linear_constraints_obj);
-    if (i == NULL) return NULL;
-    PyObject* co;
-    while ((co = PyIter_Next(i))) {
-      linear_constraints->push_back(linear_constraint_t());
-      linear_constraint_t& c = linear_constraints->back();
-      vector<weighted_edge_t>& expr = c.first;
-      pair<double, double>& range = c.second;
-      PyObject* lo = PySequence_GetItem(co, 0);
-      if (lo == NULL) return NULL;
-      PyObject* j = PyObject_GetIter(lo);
-      if (j == NULL) return NULL;
-      PyObject* eo;
-      while ((eo = PyIter_Next(j))) {
-        PyObject* uo = PySequence_GetItem(eo, 0);
-        if (uo == NULL || !PyBytes_Check(uo)) return NULL;
-        string u = PyBytes_AsString(uo);
-        PyObject* vo = PySequence_GetItem(eo, 1);
-        if (vo == NULL || !PyBytes_Check(vo)) return NULL;
-        string v = PyBytes_AsString(vo);
-        PyObject* wo = PySequence_GetItem(eo, 2);
-        if (wo == NULL || !PyFloat_Check(wo)) return NULL;
-        double w = PyFloat_AsDouble(wo);
-        expr.push_back(make_pair(make_pair(u, v), w));
-      }
-      PyObject* ro = PySequence_GetItem(co, 1);
-      if (ro == NULL) return NULL;
-      PyObject* r0o = PySequence_GetItem(ro, 0);
-      if (r0o == NULL || !PyFloat_Check(r0o)) return NULL;
-      range.first = PyFloat_AsDouble(r0o);
-      PyObject* r1o = PySequence_GetItem(ro, 1);
-      if (r1o == NULL || !PyFloat_Check(r1o)) return NULL;
-      range.second = PyFloat_AsDouble(r1o);
-    }
-  }
-
-  setset ss =
-      SearchGraphs(graph, vertex_groups, degree_constraints, num_edges,
-                   num_comps, no_loop, search_space, linear_constraints);
-
-  PySetsetObject* ret = reinterpret_cast<PySetsetObject*>(
-      PySetset_Type.tp_alloc(&PySetset_Type, 0));
-  ret->ss = new setset(ss);
-  return reinterpret_cast<PyObject*>(ret);
-}
-
 static PyObject* graphset_show_messages(PySetsetObject* self, PyObject* obj) {
-  int ret = graphillion::ShowMessages(PyObject_IsTrue(obj));
+  int ret = digraphillion::ShowMessages(PyObject_IsTrue(obj));
   if (ret)
     Py_RETURN_TRUE;
   else
@@ -1329,12 +1159,10 @@ static PyObject* graphset_show_messages(PySetsetObject* self, PyObject* obj) {
 
 static PyMethodDef module_methods[] = {
     {"load", reinterpret_cast<PyCFunction>(setset_load), METH_O, ""},
-    {"loads", reinterpret_cast<PyCFunction>(setset_loads), METH_O, ""},
+//    {"loads", reinterpret_cast<PyCFunction>(setset_loads), METH_O, ""},
     {"_elem_limit", reinterpret_cast<PyCFunction>(setset_elem_limit),
      METH_NOARGS, ""},
     {"_num_elems", setset_num_elems, METH_VARARGS, ""},
-    {"_graphs", reinterpret_cast<PyCFunction>(graphset_graphs),
-     METH_VARARGS | METH_KEYWORDS, ""},
     {"_show_messages", reinterpret_cast<PyCFunction>(graphset_show_messages),
      METH_O, ""},
     {NULL} /* Sentinel */
