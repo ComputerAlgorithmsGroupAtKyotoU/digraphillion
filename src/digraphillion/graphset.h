@@ -1,8 +1,8 @@
 #ifndef DIGRAPHILLION_GRAPHSET_H_
 #define DIGRAPHILLION_GRAPHSET_H_
 
-#include "subsetting/util/IntSubset.hpp"
 #include "digraphillion/setset.h"
+#include "subsetting/util/IntSubset.hpp"
 
 namespace digraphillion {
 

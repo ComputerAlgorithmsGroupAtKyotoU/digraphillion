@@ -1,6 +1,7 @@
 #ifndef DIGRAPHILLION_UTIL_H_
 #define DIGRAPHILLION_UTIL_H_
 
+#include <sstream>
 #include <string>
 #include <vector>
 
@@ -43,9 +44,6 @@ std::string join(const std::vector<T>& v, std::string sep = " ") {
   }
   return ss.str();
 }
-
-std::vector<std::string> split(const std::string& str,
-                               const std::string sep = " ");
 
 inline bool is_space(std::string s) {
   return s.find_first_not_of(" \t\r\n") == std::string::npos;

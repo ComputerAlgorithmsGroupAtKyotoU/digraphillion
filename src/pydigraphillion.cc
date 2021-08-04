@@ -6,6 +6,7 @@
 #include <algorithm>
 #include <map>
 #include <set>
+#include <sstream>
 #include <string>
 #include <vector>
 
@@ -790,12 +791,11 @@ static PyObject* setset_dump(PySetsetObject* self, PyObject* obj) {
   Py_RETURN_NONE;
 }
 
-//TODO
-//static PyObject* setset_dumps(PySetsetObject* self) {
-//  std::stringstream sstr;
-//  self->ss->dump(sstr);
-//  return PyStr_FromString(sstr.str().c_str());
-//}
+static PyObject* setset_dumps(PySetsetObject* self) {
+  std::stringstream sstr;
+  self->ss->dump(sstr);
+  return PyStr_FromString(sstr.str().c_str());
+}
 
 static PyObject* setset_load(PySetsetObject* self, PyObject* obj) {
   CHECK_OR_ERROR(obj, PyFile_Check, "file", NULL);
@@ -821,15 +821,14 @@ static PyObject* setset_load(PySetsetObject* self, PyObject* obj) {
   return reinterpret_cast<PyObject*>(ret);
 }
 
-//TODO
-//static PyObject* setset_loads(PySetsetObject* self, PyObject* obj) {
-//  CHECK_OR_ERROR(obj, PyStr_Check, "str", NULL);
-//  std::stringstream sstr(PyStr_AsString(obj));
-//  PySetsetObject* ret = reinterpret_cast<PySetsetObject*>(
-//      PySetset_Type.tp_alloc(&PySetset_Type, 0));
-//  ret->ss = new digraphillion::setset(digraphillion::setset::load(sstr));
-//  return reinterpret_cast<PyObject*>(ret);
-//}
+static PyObject* setset_loads(PySetsetObject* self, PyObject* obj) {
+  CHECK_OR_ERROR(obj, PyStr_Check, "str", NULL);
+  std::stringstream sstr(PyStr_AsString(obj));
+  PySetsetObject* ret = reinterpret_cast<PySetsetObject*>(
+      PySetset_Type.tp_alloc(&PySetset_Type, 0));
+  ret->ss = new digraphillion::setset(digraphillion::setset::load(sstr));
+  return reinterpret_cast<PyObject*>(ret);
+}
 
 static PyObject* setset_enum(PySetsetObject* self, PyObject* obj) {
   CHECK_OR_ERROR(obj, PyFile_Check, "file", NULL);
@@ -852,14 +851,13 @@ static PyObject* setset_enum(PySetsetObject* self, PyObject* obj) {
   Py_RETURN_NONE;
 }
 
-//TODO
-//static PyObject* setset_enums(PySetsetObject* self) {
-//  std::stringstream sstr;
-//  std::string name = Py_TYPE(self)->tp_name;
-//  self->ss->_enum(sstr, std::make_pair((name + "([").c_str(), "])"),
-//                  std::make_pair("set([", "])"));
-//  return PyStr_FromString(sstr.str().c_str());
-//}
+static PyObject* setset_enums(PySetsetObject* self) {
+  std::stringstream sstr;
+  std::string name = Py_TYPE(self)->tp_name;
+  self->ss->_enum(sstr, std::make_pair((name + "([").c_str(), "])"),
+                  std::make_pair("set([", "])"));
+  return PyStr_FromString(sstr.str().c_str());
+}
 
 static PyObject* setset_repr(PySetsetObject* self) {
   return PyStr_FromFormat("<%s object of %p>", Py_TYPE(self)->tp_name,
@@ -924,8 +922,8 @@ static PyObject* setset_richcompare(PySetsetObject* self, PyObject* obj,
   return Py_NotImplemented;
 }
 
-//TODO
-//static PyMemberDef setset_members[] = {
+// TODO
+// static PyMemberDef setset_members[] = {
 //    {NULL} /* Sentinel */
 //};
 
@@ -993,9 +991,9 @@ static PyMethodDef setset_methods[] = {
     {"probability", reinterpret_cast<PyCFunction>(setset_probability), METH_O,
      ""},
     {"dump", reinterpret_cast<PyCFunction>(setset_dump), METH_O, ""},
-//    {"dumps", reinterpret_cast<PyCFunction>(setset_dumps), METH_NOARGS, ""},
-//    {"_enum", reinterpret_cast<PyCFunction>(setset_enum), METH_O, ""},
-//    {"_enums", reinterpret_cast<PyCFunction>(setset_enums), METH_NOARGS, ""},
+    {"dumps", reinterpret_cast<PyCFunction>(setset_dumps), METH_NOARGS, ""},
+    {"_enum", reinterpret_cast<PyCFunction>(setset_enum), METH_O, ""},
+    {"_enums", reinterpret_cast<PyCFunction>(setset_enums), METH_NOARGS, ""},
     {NULL} /* Sentinel */
 };
 
@@ -1107,17 +1105,17 @@ __declspec(dllexport)
         0,                                                 /* tp_traverse */
         0,                                                 /* tp_clear */
         reinterpret_cast<richcmpfunc>(setset_richcompare), /* tp_richcompare */
-        0,                                       /* tp_weaklistoffset */
-        0,                                       /* tp_iter */
-        0,                                       /* tp_iternext */
-        setset_methods,                          /* tp_methods */
-        0, //setset_members,                          /* tp_members */
-        0,                                       /* tp_getset */
-        0,                                       /* tp_base */
-        0,                                       /* tp_dict */
-        0,                                       /* tp_descr_get */
-        0,                                       /* tp_descr_set */
-        0,                                       /* tp_dictoffset */
+        0,              /* tp_weaklistoffset */
+        0,              /* tp_iter */
+        0,              /* tp_iternext */
+        setset_methods, /* tp_methods */
+        0,  // setset_members,                          /* tp_members */
+        0,  /* tp_getset */
+        0,  /* tp_base */
+        0,  /* tp_dict */
+        0,  /* tp_descr_get */
+        0,  /* tp_descr_set */
+        0,  /* tp_dictoffset */
         reinterpret_cast<initproc>(setset_init), /* tp_init */
         PyType_GenericAlloc,                     /* tp_alloc */
         setset_new,                              /* tp_new */
@@ -1159,7 +1157,7 @@ static PyObject* graphset_show_messages(PySetsetObject* self, PyObject* obj) {
 
 static PyMethodDef module_methods[] = {
     {"load", reinterpret_cast<PyCFunction>(setset_load), METH_O, ""},
-//    {"loads", reinterpret_cast<PyCFunction>(setset_loads), METH_O, ""},
+    {"loads", reinterpret_cast<PyCFunction>(setset_loads), METH_O, ""},
     {"_elem_limit", reinterpret_cast<PyCFunction>(setset_elem_limit),
      METH_NOARGS, ""},
     {"_num_elems", setset_num_elems, METH_VARARGS, ""},
@@ -1168,30 +1166,30 @@ static PyMethodDef module_methods[] = {
     {NULL} /* Sentinel */
 };
 
-PyDoc_STRVAR(graphillion_doc,
+PyDoc_STRVAR(digraphillion_doc,
              "Hidden module to implement graphillion classes.");
 
 #if IS_PY3 == 1
 static struct PyModuleDef moduledef = {
     PyModuleDef_HEAD_INIT,
-    "_graphillion",  /* m_name */
-    graphillion_doc, /* m_doc */
-    -1,              /* m_size */
-    module_methods,  /* m_methods */
-    NULL,            /* m_reload */
-    NULL,            /* m_traverse */
-    NULL,            /* m_clear */
-    NULL,            /* m_free */
+    "_digraphillion",  /* m_name */
+    digraphillion_doc, /* m_doc */
+    -1,                /* m_size */
+    module_methods,    /* m_methods */
+    NULL,              /* m_reload */
+    NULL,              /* m_traverse */
+    NULL,              /* m_clear */
+    NULL,              /* m_free */
 };
 #endif
-MODULE_INIT_FUNC(_graphillion) {
+MODULE_INIT_FUNC(_digraphillion) {
   PyObject* m;
   if (PyType_Ready(&PySetset_Type) < 0) return NULL;
   if (PyType_Ready(&PySetsetIter_Type) < 0) return NULL;
 #if IS_PY3 == 1
   m = PyModule_Create(&moduledef);
 #else
-  m = Py_InitModule3("_graphillion", module_methods, graphillion_doc);
+  m = Py_InitModule3("_digraphillion", module_methods, digraphillion_doc);
 #endif
   if (m == NULL) return NULL;
   Py_INCREF(&PySetset_Type);

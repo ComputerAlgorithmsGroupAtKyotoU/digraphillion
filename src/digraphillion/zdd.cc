@@ -1,6 +1,7 @@
 #include "digraphillion/zdd.h"
 
 #include <algorithm>
+#include <climits>
 #include <map>
 #include <string>
 
