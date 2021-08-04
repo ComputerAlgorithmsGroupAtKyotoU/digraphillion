@@ -1068,7 +1068,7 @@ static PySequenceMethods setset_as_sequence = {
 };
 
 PyDoc_STRVAR(setset_doc,
-             "Hidden class to implement graphillion classes.\n\
+             "Hidden class to implement digraphillion classes.\n\
 \n\
 A setset object stores a set of sets.  A set element must be a\n\
 positive number.");
@@ -1077,7 +1077,7 @@ positive number.");
 __declspec(dllexport)
 #endif
     PyTypeObject PySetset_Type = {
-        PyVarObject_HEAD_INIT(NULL, 0) "_graphillion.setset", /*tp_name*/
+        PyVarObject_HEAD_INIT(NULL, 0) "_digraphillion.setset", /*tp_name*/
         sizeof(PySetsetObject),                               /*tp_basicsize*/
         0,                                                    /*tp_itemsize*/
         reinterpret_cast<destructor>(setset_dealloc),         /*tp_dealloc*/
@@ -1167,7 +1167,7 @@ static PyMethodDef module_methods[] = {
 };
 
 PyDoc_STRVAR(digraphillion_doc,
-             "Hidden module to implement graphillion classes.");
+             "Hidden module to implement digraphillion classes.");
 
 #if IS_PY3 == 1
 static struct PyModuleDef moduledef = {

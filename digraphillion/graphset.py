@@ -137,8 +137,8 @@ class DiGraphSet(object):
                     d[k] = [DiGraphSet._conv_edge(e) for e in l]
                 obj = d
             self._ss = setset(obj)
-        methods = ['graphs', 'connected_components', 'cliques', 'trees',
-                   'forests', 'cycles', 'paths']
+        methods = [] #['graphs', 'connected_components', 'cliques', 'trees',
+                  # 'forests', 'cycles', 'paths']
         for method in methods:
             setattr(self, method, partial(
                 getattr(DiGraphSet, method), DiGraphSet=self))
@@ -1597,7 +1597,7 @@ class DiGraphSet(object):
         DiGraphSet._weights = {}
         universe = DiGraphSet.converters['to_edges'](universe)
         for e in universe:
-            if e[:2] in indexed_edges or (e[1], e[0]) in indexed_edges:
+            if e[:2] in indexed_edges:  # directed
                 raise KeyError(e)
             sorted_edges.append(e[:2])
             indexed_edges.add(e[:2])
@@ -1608,7 +1608,8 @@ class DiGraphSet(object):
                 source = sorted_edges[0][0]
                 for e in sorted_edges:
                     source = min(e[0], e[1], source)
-            sorted_edges = DiGraphSet._traverse(indexed_edges, traversal, source)
+            sorted_edges = DiGraphSet._traverse(
+                indexed_edges, traversal, source)
         for u, v in sorted_edges:
             DiGraphSet._vertices.add(u)
             DiGraphSet._vertices.add(v)
@@ -1640,343 +1641,6 @@ class DiGraphSet(object):
         return DiGraphSet.converters['to_graph'](edges)
 
     @staticmethod
-    def graphs(vertex_groups=None, degree_constraints=None, num_edges=None,
-               no_loop=False, DiGraphSet=None, linear_constraints=None):
-        """Returns a DiGraphSet with graphs under given constraints.
-
-        This is the base method for specific graph classes, e.g.,
-        paths and trees.
-
-        This method can be parallelized with OpenMP by specifying the
-        environmental variable `OMP_NUM_THREADS`:
-
-          `$ OMP_NUM_THREADS=4 python your_graphillion_script.py`
-
-        Examples: a set of paths from vertex 1 to vertex 6
-          >>> start = 1
-          >>> end = 6
-          >>> zero_or_two = range(0, 3, 2)
-          >>> degree_constraints = {start: 1, end: 1,
-          ...                       2: zero_or_two, 3: zero_or_two,
-          ...                       4: zero_or_two, 5: zero_or_two}
-          >>> DiGraphSet.graphs(vertex_groups=[[start, end]],
-          ...                 degree_constraints=degree_constraints,
-          ...                 no_loop=True)
-          DiGraphSet([[(1, 2), (2, 3), (3, 6)], [(1, 2), (2, 5), (5, 6)], [(1, 4), (4, 5 ...
-
-        Args:
-          vertex_groups: Optional.  A nested list.  Vertices in an
-            inner list are connected while those in different inner
-            lists are disconnected.  For `[[1, 5], [3]]`, 1 and 5 are
-            connected, while they are not connected with 3.
-
-          degree_constraints: Optional.  A dict with a vertex and a
-            range or int.  The degree of a vertex is restricted by the
-            range.  For `{1: 2, 6: range(2)}`, the degree of vertex 1
-            is 2 and that of 6 is less than 2, while others are not
-            cared.
-
-          num_edges: Optional.  A range or int.  This argument
-            specifies the number of edges used in graphs to be stored.
-            For `range(5)`, less than 5 edges can be used.
-
-          no_loop: Optional.  True or False.  This argument specifies
-            if loop is not allowed.
-
-          DiGraphSet: Optional.  A DiGraphSet object.  Graphs to be stored
-            are selected from this object.
-
-          linear_constraints: Optional.  A list of linear constraints.
-            A linear constraint consists of weighted edges and
-            lower/upper bounds.  An edge weight is a positive or
-            negative number, which defaults to 1.  Weights of the edges
-            that are not included in the constraint are zeros.  For
-            instance, `linear_constraints=[([(1, 2, 0.6), (2, 5),
-            (3, 6, 1.2)], (1.5, 2.0))]`, feasible graph weights are
-            between 1.5 and 2.0, e.g., `[(1, 2), (2, 3), (3, 6)]` or
-            `[(1, 2), (2, 5), (5, 6)]`.
-            See graphillion/test/DiGraphSet.py in detail.
-
-        Returns:
-          A new DiGraphSet object.
-
-        See Also:
-          connected_components(), cliques(), trees(), forests(),
-          cycles(), paths()
-
-        """
-        graph = []
-        for e in setset.universe():
-            assert e[0] in DiGraphSet._vertices and e[1] in DiGraphSet._vertices
-            graph.append(
-                (pickle.dumps(e[0], protocol=0), pickle.dumps(e[1], protocol=0)))
-
-        vg = []
-        nc = 0
-        if vertex_groups is not None:
-            for vs in vertex_groups:
-                if len(vs) == 0:
-                    nc += 1
-                else:
-                    for v in vs:
-                        if v not in DiGraphSet._vertices:
-                            raise KeyError(v)
-                    vg.append([pickle.dumps(v, protocol=0) for v in vs])
-        if not vg and nc == 0:
-            nc = -1
-
-        dc = None
-        if degree_constraints is not None:
-            dc = {}
-            for v, r in viewitems(degree_constraints):
-                if v not in DiGraphSet._vertices:
-                    raise KeyError(v)
-                if isinstance(r, int):
-                    dc[pickle.dumps(v, protocol=0)] = (r, r + 1, 1)
-                elif len(r) == 1:
-                    dc[pickle.dumps(v, protocol=0)] = (r[0], r[0] + 1, 1)
-                else:
-                    dc[pickle.dumps(v, protocol=0)] = (
-                        r[0], r[-1] + 1, r[1] - r[0])
-
-        ne = None
-        if num_edges is not None:
-            if isinstance(num_edges, int):
-                ne = (num_edges, num_edges + 1, 1)
-            elif len(num_edges) == 1:
-                ne = (num_edges[0], num_edges[0] + 1, 1)
-            else:
-                ne = (num_edges[0], num_edges[-1] + 1,
-                      num_edges[1] - num_edges[0])
-
-        ss = None if DiGraphSet is None else DiGraphSet._ss
-
-        lc = None
-        if linear_constraints is not None:
-            lc = []
-            for c in linear_constraints:
-                expr = []
-                for we in c[0]:
-                    u = pickle.dumps(we[0], protocol=0)
-                    v = pickle.dumps(we[1], protocol=0)
-                    w = float(we[2]) if len(we) >= 3 else 1.0
-                    expr.append((u, v, w))
-                min = float(c[1][0])
-                max = float(c[1][1])
-                lc.append((expr, (min, max)))
-
-        ss = _graphillion._graphs(graph=graph, vertex_groups=vg,
-                                  degree_constraints=dc, num_edges=ne,
-                                  num_comps=nc, no_loop=no_loop,
-                                  search_space=ss,
-                                  linear_constraints=lc)
-        return DiGraphSet(ss)
-
-    @staticmethod
-    def connected_components(vertices, DiGraphSet=None):
-        """Returns a DiGraphSet of connected components.
-
-        This method can be parallelized with OpenMP by specifying the
-        environmental variable `OMP_NUM_THREADS`:
-
-          `$ OMP_NUM_THREADS=4 python your_graphillion_script.py`
-
-        Examples:
-          >>> DiGraphSet.connected_components([1, 3, 5])
-          DiGraphSet([[(1, 2), (2, 3), (2, 5)], [(1, 2), (1, 4), (2, 3), (2, 5)], [(1, 2 ...
-
-        Args:
-          vertices: A list of vertices to be connected.
-
-          DiGraphSet: Optional.  A DiGraphSet object.  Components to be
-            stored are selected from this object.
-
-        Returns:
-          A new DiGraphSet object.
-
-        See Also:
-          graphs()
-        """
-        return DiGraphSet.graphs(vertex_groups=[vertices], DiGraphSet=DiGraphSet)
-
-    @staticmethod
-    def cliques(k, DiGraphSet=None):
-        """Returns a DiGraphSet of k-cliques.
-
-        This method can be parallelized with OpenMP by specifying the
-        environmental variable `OMP_NUM_THREADS`:
-
-          `$ OMP_NUM_THREADS=4 python your_graphillion_script.py`
-
-        Examples:
-          >>> DiGraphSet.set_universe([(1, 2), (1, 3), (1, 4), (1, 5), (2, 3), (2, 4),
-                                     (2, 5), (3, 4), (3, 5), (4, 5)])
-          >>> DiGraphSet.cliques(4)
-          DiGraphSet([[(1, 2), (1, 3), (1, 4), (2, 3), (2, 4), (3, 4)], [(1, 2), (1, 3), ...
-
-        Args:
-          k: An integer.  The number of vertices in a clique.
-
-          DiGraphSet: Optional.  A DiGraphSet object.  Cliques to be
-            stored are selected from this object.
-
-        Returns:
-          A new DiGraphSet object.
-
-        See Also:
-          graphs()
-        """
-        dc = {}
-        for v in DiGraphSet._vertices:
-            dc[v] = range(0, k, k - 1)
-        ne = range(k * (k - 1) // 2, k * (k - 1) // 2 + 1)
-        return DiGraphSet.graphs(vertex_groups=[[]], degree_constraints=dc,
-                               num_edges=ne, DiGraphSet=DiGraphSet)
-
-    @staticmethod
-    def trees(root=None, is_spanning=False, DiGraphSet=None):
-        """Returns a DiGraphSet of trees.
-
-        This method can be parallelized with OpenMP by specifying the
-        environmental variable `OMP_NUM_THREADS`:
-
-          `$ OMP_NUM_THREADS=4 python your_graphillion_script.py`
-
-        Examples:
-          >>> DiGraphSet.trees(1, is_spanning=True)
-          DiGraphSet([[(1, 2), (1, 4), (2, 3), (2, 5), (3, 6)], [(1, 2), (1, 4), (2, 3), ...
-
-        Args:
-          root:  Optional.  A vertex, at which trees are rooted.
-
-          is_spanning: Optional.  True or False.  If true, trees must
-            be composed of all vertices.
-
-          DiGraphSet: Optional.  A DiGraphSet object.  Trees to be stored
-            are selected from this object.
-
-        Returns:
-          A new DiGraphSet object.
-
-        See Also:
-          graphs()
-        """
-        vg = [[]] if root is None else [[root]]
-        dc = None
-        if is_spanning:
-            dc = {}
-            for v in DiGraphSet._vertices:
-                dc[v] = range(1, len(DiGraphSet._vertices))
-        return DiGraphSet.graphs(vertex_groups=vg, degree_constraints=dc,
-                               no_loop=True, DiGraphSet=DiGraphSet)
-
-    @staticmethod
-    def forests(roots, is_spanning=False, DiGraphSet=None):
-        """Returns a DiGraphSet of forests, sets of trees.
-
-        This method can be parallelized with OpenMP by specifying the
-        environmental variable `OMP_NUM_THREADS`:
-
-          `$ OMP_NUM_THREADS=4 python your_graphillion_script.py`
-
-        Examples:
-          >>> DiGraphSet.forests([1, 6])
-          DiGraphSet([[], [(1, 2)], [(1, 4)], [(3, 6)], [(5, 6)], [(1, 2), (1, 4)], [(1, ...
-
-        Args:
-          roots: Optional.  A list of vertices, at which trees are
-            rooted.
-
-          is_spanning: Optional.  True or False.  If true, forests must
-            be composed of all vertices.
-
-          DiGraphSet: Optional.  A DiGraphSet object.  Forests to be stored
-            are selected from this object.
-
-        Returns:
-          A new DiGraphSet object.
-
-        See Also:
-          graphs()
-        """
-        vg = [[r] for r in roots]
-        dc = None
-        if is_spanning:
-            dc = {}
-            for v in DiGraphSet._vertices:
-                if v not in roots:
-                    dc[v] = range(1, len(DiGraphSet._vertices))
-        return DiGraphSet.graphs(vertex_groups=vg, degree_constraints=dc,
-                               no_loop=True, DiGraphSet=DiGraphSet)
-
-    @staticmethod
-    def cycles(is_hamilton=False, DiGraphSet=None):
-        """Returns a DiGraphSet of cycles.
-
-        This method can be parallelized with OpenMP by specifying the
-        environmental variable `OMP_NUM_THREADS`:
-
-          `$ OMP_NUM_THREADS=4 python your_graphillion_script.py`
-
-        Examples:
-          >>> DiGraphSet.cycles(is_hamilton=True)
-          DiGraphSet([[(1, 2), (1, 4), (2, 3), (3, 6), (4, 5), (5, 6)]])
-
-        Args:
-          is_hamilton: Optional.  True or False.  If true, cycles must
-            be composed of all vertices.
-
-          DiGraphSet: Optional.  A DiGraphSet object.  Cycles to be stored
-            are selected from this object.
-
-        Returns:
-          A new DiGraphSet object.
-
-        See Also:
-          graphs()
-        """
-        dc = {}
-        for v in DiGraphSet._vertices:
-            dc[v] = 2 if is_hamilton else range(0, 3, 2)
-        return DiGraphSet.graphs(vertex_groups=[[]], degree_constraints=dc,
-                               DiGraphSet=DiGraphSet)
-
-    @staticmethod
-    def paths(terminal1, terminal2, is_hamilton=False, DiGraphSet=None):
-        """Returns a DiGraphSet of paths.
-
-        This method can be parallelized with OpenMP by specifying the
-        environmental variable `OMP_NUM_THREADS`:
-
-          `$ OMP_NUM_THREADS=4 python your_graphillion_script.py`
-
-        Examples:
-          >>> DiGraphSet.paths(1, 6)
-          DiGraphSet([[(1, 2), (2, 3), (3, 6)], [(1, 2), (2, 5), (5, 6)], [(1, 4), (4, 5 ...
-
-        Args:
-          terminal1 and terminal2: Both end vertices of a paths.
-
-          DiGraphSet: Optional.  A DiGraphSet object.  Paths to be stored
-            are selected from this object.
-
-        Returns:
-          A new DiGraphSet object.
-
-        See Also:
-          graphs()
-        """
-        dc = {}
-        for v in DiGraphSet._vertices:
-            if v in (terminal1, terminal2):
-                dc[v] = 1
-            else:
-                dc[v] = 2 if is_hamilton else range(0, 3, 2)
-        return DiGraphSet.graphs(vertex_groups=[[terminal1, terminal2]],
-                               degree_constraints=dc,
-                               no_loop=True, DiGraphSet=DiGraphSet)
-
-    @staticmethod
     def show_messages(flag=True):
         """Enables/disables status messages.
 
@@ -1988,7 +1652,7 @@ class DiGraphSet(object):
           The setting before the method call.  True (enabled) or
           False (disabled).
         """
-        return _graphillion._show_messages(flag)
+        return _digraphillion._show_messages(flag)
 
     @staticmethod
     def _traverse(indexed_edges, traversal, source):

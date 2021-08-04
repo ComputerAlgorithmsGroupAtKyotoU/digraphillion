@@ -6,7 +6,7 @@
 
 ## how to test
 
-- `pytest -rsfp`
+- `python3 setup.py test`
 
 ## References
 
