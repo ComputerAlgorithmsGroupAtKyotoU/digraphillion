@@ -172,13 +172,8 @@ class setset {
   zdd_t zdd_;
 
   friend class TestSetset;
-  friend setset SearchGraphs(
-      const std::vector<edge_t>& graph,
-      const std::vector<std::vector<vertex_t> >* vertex_groups,
-      const std::map<vertex_t, Range>* degree_constraints,
-      const Range* num_edges, int num_comps, bool no_loop,
-      const setset* search_space,
-      const std::vector<linear_constraint_t>* linear_constraints);
+  friend setset SearchDirectedCycles(const std::vector<edge_t>& digraph,
+                                     const setset* search_space);
 };
 
 }  // namespace digraphillion

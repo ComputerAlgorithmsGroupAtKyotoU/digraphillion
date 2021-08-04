@@ -21,6 +21,9 @@ class Range : public tdzdd::IntSubset {
   int step_;
 };
 
+setset SearchDirectedCycles(const std::vector<edge_t>& digraph,
+                            const setset* search_space);
+
 bool ShowMessages(bool flag = true);
 
 }  // namespace digraphillion

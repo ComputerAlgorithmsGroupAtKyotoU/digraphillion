@@ -137,8 +137,8 @@ class DiGraphSet(object):
                     d[k] = [DiGraphSet._conv_edge(e) for e in l]
                 obj = d
             self._ss = setset(obj)
-        methods = [] #['graphs', 'connected_components', 'cliques', 'trees',
-                  # 'forests', 'cycles', 'paths']
+        methods = []  # ['graphs', 'connected_components', 'cliques', 'trees',
+        # 'forests', 'cycles', 'paths']
         for method in methods:
             setattr(self, method, partial(
                 getattr(DiGraphSet, method), DiGraphSet=self))
@@ -1641,6 +1641,19 @@ class DiGraphSet(object):
         return DiGraphSet.converters['to_graph'](edges)
 
     @staticmethod
+    def directed_cycles(graphset=None):
+        graph = []
+        for e in setset.universe():
+            assert e[0] in DiGraphSet._vertices and e[1] in DiGraphSet._vertices
+            graph.append(
+                (pickle.dumps(e[0], protocol=0), pickle.dumps(e[1], protocol=0)))
+
+        ss = None if graphset is None else graphset._ss
+
+        ss = _digraphillion._directed_cycles(graph=graph, search_space=ss)
+        return DiGraphSet(ss)
+
+    @staticmethod
     def show_messages(flag=True):
         """Enables/disables status messages.
 
@@ -1687,6 +1700,7 @@ class DiGraphSet(object):
                         degree[u] -= 1
                         e = (u, v) if (u, v) in indexed_edges else (v, u)
                         sorted_edges.append(e)
+                        sorted_edges.append((e[1], e[0]))
                         if degree[v]:
                             for w in sorted(neighbors[v]):
                                 if w not in visited_vertices:
