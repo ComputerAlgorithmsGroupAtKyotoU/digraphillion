@@ -28,13 +28,21 @@ class FrontierDirectedSingleHamiltonianCycleSpec
   const int all_entered_level_;
 
   // This function gets deg of v.
-  short getDeg(DirectedFrontierData* data, short v) const {
-    return data[fm_.vertexToPos(v)].deg;
+  short getIndeg(DirectedFrontierData* data, short v) const {
+    return data[fm_.vertexToPos(v)].indeg;
+  }
+
+  short getOutdeg(DirectedFrontierData* data, short v) const {
+    return data[fm_.vertexToPos(v)].outdeg;
   }
 
   // This function sets deg of v to be d.
-  void setDeg(DirectedFrontierData* data, short v, short d) const {
-    data[fm_.vertexToPos(v)].deg = d;
+  void setIndeg(DirectedFrontierData* data, short v, short d) const {
+    data[fm_.vertexToPos(v)].indeg = d;
+  }
+
+  void setOutdeg(DirectedFrontierData* data, short v, short d) const {
+    data[fm_.vertexToPos(v)].outdeg = d;
   }
 
   // This function gets comp of v.
@@ -49,7 +57,8 @@ class FrontierDirectedSingleHamiltonianCycleSpec
 
   void initializeDegComp(DirectedFrontierData* data) const {
     for (int i = 0; i < fm_.getMaxFrontierSize(); ++i) {
-      data[i].deg = 0;
+      data[i].indeg = 0;
+      data[i].outdeg = 0;
       data[i].comp = 0;
     }
   }
@@ -81,14 +90,15 @@ class FrontierDirectedSingleHamiltonianCycleSpec
     const int edge_index = m_ - level;
     // edge that we are processing.
     // The endpoints of "edge" are edge.v1 and edge.v2.
-    const Graph::EdgeInfo& edge = graph_.edgeInfo(edge_index);
+    const Digraph::EdgeInfo& edge = graph_.edgeInfo(edge_index);
 
     // initialize deg and comp of the vertices newly entering the frontier
     const std::vector<int>& entering_vs = fm_.getEnteringVs(edge_index);
     for (size_t i = 0; i < entering_vs.size(); ++i) {
       int v = entering_vs[i];
       // initially the value of deg is 0
-      setDeg(data, v, 0);
+      setIndeg(data, v, 0);
+      setOutdeg(data, v, 0);
       // initially the value of comp is the vertex number itself
       setComp(data, v, v);
     }
@@ -98,8 +108,11 @@ class FrontierDirectedSingleHamiltonianCycleSpec
 
     if (value == 1) {  // if we take the edge (go to 1-arc)
       // increment deg of v1 and v2 (recall that edge = {v1, v2})
-      setDeg(data, edge.v1, getDeg(data, edge.v1) + 1);
-      setDeg(data, edge.v2, getDeg(data, edge.v2) + 1);
+      auto outdeg1 = getOutdeg(data, edge.v1);
+      auto indeg2 = getIndeg(data, edge.v2);
+
+      setIndeg(data, edge.v2, indeg2 + 1);
+      setOutdeg(data, edge.v1, outdeg1 + 1);
 
       short c1 = getComp(data, edge.v1);
       short c2 = getComp(data, edge.v2);
@@ -122,8 +135,11 @@ class FrontierDirectedSingleHamiltonianCycleSpec
     for (size_t i = 0; i < leaving_vs.size(); ++i) {
       int v = leaving_vs[i];
 
-      // The degree of v must be 2.
-      if (getDeg(data, v) != 2) {
+      // The degree of v must be 0 or 2.
+      // in/out = 0/0 or 1/1
+      bool ok = (getIndeg(data, v) == 0 && getOutdeg(data, v) == 0) ||
+                (getIndeg(data, v) == 1 && getOutdeg(data, v) == 1);
+      if (!ok) {
         return 0;
       }
 
@@ -157,7 +173,7 @@ class FrontierDirectedSingleHamiltonianCycleSpec
           samecomp_found = true;
         }
         // The degree of w is at least 1.
-        if (getDeg(data, w) > 0) {
+        if (getIndeg(data, w) > 0 || getOutdeg(data, w) > 0) {
           nonisolated_found = true;
         }
         if (nonisolated_found && samecomp_found) {
@@ -169,7 +185,7 @@ class FrontierDirectedSingleHamiltonianCycleSpec
       // of v becomes determined.
       if (!samecomp_found) {
         // Here, deg of v is 2.
-        assert(getDeg(data, v) == 2);
+        assert(getIndeg(data, v) == 1 && getOutdeg(data, v) == 1);
 
         // Check whether there is a connected component
         // other than that of v, that is, the generated subgraph
@@ -191,7 +207,8 @@ class FrontierDirectedSingleHamiltonianCycleSpec
       }
       // Since deg and comp of v are never used until the end,
       // we erase the values.
-      setDeg(data, v, -1);
+      setIndeg(data, v, -1);
+      setOutdeg(data, v, -1);
       setComp(data, v, -1);
     }
     if (level == 1) {

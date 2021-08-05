@@ -107,11 +107,9 @@ class FrontierDirectedSingleCycleSpec
       // 評価順序怪しそう?
       auto outdeg1 = getOutdeg(data, edge.v1);
       auto indeg2 = getIndeg(data, edge.v2);
-      // setIndeg(data, edge.v1, indeg1 + 1);
-      setIndeg(data, edge.v2, indeg2 + 1);
 
+      setIndeg(data, edge.v2, indeg2 + 1);
       setOutdeg(data, edge.v1, outdeg1 + 1);
-      // setOutdeg(data, edge.v2, outdeg2 + 1);
 
       short c1 = getComp(data, edge.v1);
       short c2 = getComp(data, edge.v2);

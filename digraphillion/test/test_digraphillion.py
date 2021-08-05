@@ -42,5 +42,11 @@ class TestDiGraphSet(unittest.TestCase):
         self.assertTrue([(5, 4), (4, 1), (1, 2), (2, 5)] in gs)
 
 
+    def test_directed_hamiltonian_cycles(self):
+        DiGraphSet.set_universe(universe_edges)
+        gs = DiGraphSet.directed_cycles()
+        for gg in gs:
+            print(gg)
+
 if __name__ == '__main__':
     unittest.main()

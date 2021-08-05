@@ -174,6 +174,8 @@ class setset {
   friend class TestSetset;
   friend setset SearchDirectedCycles(const std::vector<edge_t>& digraph,
                                      const setset* search_space);
+  friend setset SearchDirectedHamiltonianCycles(
+      const std::vector<edge_t>& digraph, const setset* search_space);
 };
 
 }  // namespace digraphillion
