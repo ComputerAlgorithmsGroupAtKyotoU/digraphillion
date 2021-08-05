@@ -138,7 +138,8 @@ class DiGraphSet(object):
                 obj = d
             self._ss = setset(obj)
         # ['graphs', 'connected_components', 'cliques', 'trees',
-        methods = ['directed_cycles', 'directed_hamiltonian_cycles']
+        methods = ['directed_cycles',
+                   'directed_hamiltonian_cycles', 'directed_st_path']
         # 'forests', 'cycles', 'paths']
         for method in methods:
             setattr(self, method, partial(
@@ -1666,6 +1667,21 @@ class DiGraphSet(object):
 
         ss = _digraphillion._directed_hamiltonian_cycles(
             graph=graph, search_space=ss)
+        return DiGraphSet(ss)
+
+    @staticmethod
+    def directed_st_path(s, t, is_hamiltonian=False, graphset=None):
+        graph = []
+        for e in setset.universe():
+            assert e[0] in DiGraphSet._vertices and e[1] in DiGraphSet._vertices
+            graph.append(
+                (pickle.dumps(e[0], protocol=0), pickle.dumps(e[1], protocol=0)))
+
+        ss = None if graphset is None else graphset._ss
+
+        ss = _digraphillion._directed_st_path(
+            graph=graph, s=pickle.dumps(s, protocol=0), t=pickle.dumps(t, protocol=0),
+            is_hamiltonian=is_hamiltonian, search_space=ss)
         return DiGraphSet(ss)
 
     @staticmethod

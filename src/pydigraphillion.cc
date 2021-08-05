@@ -1151,7 +1151,7 @@ static PyObject* graphset_directed_cycles(PyObject*, PyObject* args,
                                           PyObject* kwds) {
   static char s1[] = "graph";
   static char s2[] = "search_space";
-  static char* kwlist[9] = {s1, s2, NULL};
+  static char* kwlist[3] = {s1, s2, NULL};
   PyObject* graph_obj = NULL;
   PyObject* search_space_obj = NULL;
   if (!PyArg_ParseTupleAndKeywords(args, kwds, "O|O", kwlist, &graph_obj,
@@ -1204,7 +1204,7 @@ static PyObject* graphset_directed_hamiltonian_cycles(PyObject*, PyObject* args,
                                                       PyObject* kwds) {
   static char s1[] = "graph";
   static char s2[] = "search_space";
-  static char* kwlist[9] = {s1, s2, NULL};
+  static char* kwlist[3] = {s1, s2, NULL};
   PyObject* graph_obj = NULL;
   PyObject* search_space_obj = NULL;
   if (!PyArg_ParseTupleAndKeywords(args, kwds, "O|O", kwlist, &graph_obj,
@@ -1253,6 +1253,87 @@ static PyObject* graphset_directed_hamiltonian_cycles(PyObject*, PyObject* args,
   return reinterpret_cast<PyObject*>(ret);
 }
 
+static PyObject* graphset_directed_st_path(PyObject*, PyObject* args,
+                                           PyObject* kwds) {
+  static char s1[] = "graph";
+  static char s2[] = "s";
+  static char s3[] = "t";
+  static char s4[] = "is_hamiltonian";
+  static char s5[] = "search_space";
+  static char* kwlist[6] = {s1, s2, s3, s4, s5, NULL};
+  PyObject* graph_obj = NULL;
+  bool is_hamiltonian = false;
+  PyObject* s_obj = NULL;
+  PyObject* t_obj = NULL;
+  PyObject* search_space_obj = NULL;
+  if (!PyArg_ParseTupleAndKeywords(args, kwds, "OSS|pO", kwlist, &graph_obj,
+                                   &s_obj, &t_obj, &is_hamiltonian,
+                                   &search_space_obj))
+    return NULL;
+
+  std::vector<std::pair<std::string, std::string> > graph;
+  if (graph_obj == NULL || graph_obj == Py_None) {
+    PyErr_SetString(PyExc_TypeError, "no graph");
+    return NULL;
+  }
+  PyObject* i = PyObject_GetIter(graph_obj);
+  if (i == NULL) return NULL;
+  PyObject* eo;
+  while ((eo = PyIter_Next(i))) {
+    PyObject* j = PyObject_GetIter(eo);
+    if (j == NULL) return NULL;
+    std::vector<std::string> e;
+    PyObject* vo;
+    while ((vo = PyIter_Next(j))) {
+      if (!PyBytes_Check(vo)) {
+        PyErr_SetString(PyExc_TypeError, "invalid graph");
+        return NULL;
+      }
+      std::string v = PyBytes_AsString(vo);
+      if (v.find(',') != std::string::npos) {
+        PyErr_SetString(PyExc_TypeError, "invalid vertex in the graph");
+        return NULL;
+      }
+      e.push_back(v);
+    }
+    assert(e.size() == 2);
+    graph.push_back(make_pair(e[0], e[1]));
+  }
+
+  std::string s, t;
+  if(s_obj == NULL || s_obj == Py_None){
+    PyErr_SetString(PyExc_TypeError, "no vertex s");
+    return NULL;
+  }
+  if (!PyBytes_Check(s_obj)) {
+    PyErr_SetString(PyExc_TypeError, "invalid vertex s");
+    return NULL;
+  }
+  s = PyBytes_AsString(s_obj);
+
+  if(t_obj == NULL || t_obj == Py_None){
+    PyErr_SetString(PyExc_TypeError, "no vertex t");
+    return NULL;
+  }
+  if (!PyBytes_Check(t_obj)) {
+    PyErr_SetString(PyExc_TypeError, "invalid vertex t");
+    return NULL;
+  }
+  t = PyBytes_AsString(t_obj);
+
+  digraphillion::setset* search_space = NULL;
+  if (search_space_obj != NULL && search_space_obj != Py_None)
+    search_space = reinterpret_cast<PySetsetObject*>(search_space_obj)->ss;
+
+  digraphillion::setset ss = digraphillion::SearchDirectedSTPath(
+      graph, is_hamiltonian, s, t, search_space);
+
+  PySetsetObject* ret = reinterpret_cast<PySetsetObject*>(
+      PySetset_Type.tp_alloc(&PySetset_Type, 0));
+  ret->ss = new digraphillion::setset(ss);
+  return reinterpret_cast<PyObject*>(ret);
+}
+
 static PyObject* graphset_show_messages(PySetsetObject* self, PyObject* obj) {
   int ret = digraphillion::ShowMessages(PyObject_IsTrue(obj));
   if (ret)
@@ -1272,6 +1353,9 @@ static PyMethodDef module_methods[] = {
      METH_VARARGS | METH_KEYWORDS, ""},
     {"_directed_hamiltonian_cycles",
      reinterpret_cast<PyCFunction>(graphset_directed_hamiltonian_cycles),
+     METH_VARARGS | METH_KEYWORDS, ""},
+    {"_directed_st_path",
+     reinterpret_cast<PyCFunction>(graphset_directed_st_path),
      METH_VARARGS | METH_KEYWORDS, ""},
     {"_show_messages", reinterpret_cast<PyCFunction>(graphset_show_messages),
      METH_O, ""},

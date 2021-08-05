@@ -176,6 +176,9 @@ class setset {
                                      const setset* search_space);
   friend setset SearchDirectedHamiltonianCycles(
       const std::vector<edge_t>& digraph, const setset* search_space);
+  friend setset SearchDirectedSTPath(const std::vector<edge_t>& digraph,
+                              bool is_hamiltonian, vertex_t s, vertex_t t,
+                              const setset* search_space);
 };
 
 }  // namespace digraphillion

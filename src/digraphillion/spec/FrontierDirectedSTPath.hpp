@@ -1,5 +1,5 @@
-#ifndef FRONTIER_DIRECTED_SINGLE_CYCLE_HPP
-#define FRONTIER_DIRECTED_SINGLE_CYCLE_HPP
+#ifndef FRONTIER_ST_PATH_HPP
+#define FRONTIER_ST_PATH_HPP
 
 #include <climits>
 #include <vector>
@@ -11,8 +11,8 @@
 
 using namespace tdzdd;
 
-class FrontierDirectedSingleCycleSpec
-    : public tdzdd::PodArrayDdSpec<FrontierDirectedSingleCycleSpec,
+class FrontierDirectedSTPathSpec
+    : public tdzdd::PodArrayDdSpec<FrontierDirectedSTPathSpec,
                                    DirectedFrontierData, 2> {
  private:
   // input graph
@@ -22,7 +22,16 @@ class FrontierDirectedSingleCycleSpec
   // number of edges
   const int m_;
 
+  const bool isHamiltonian_;
+
+  // endpoints of a path
+  const short s_;
+  const short t_;
+
   const FrontierManager fm_;
+
+  const int s_entered_level_;
+  const int t_entered_level_;
 
   // This function gets deg of v.
   short getIndeg(DirectedFrontierData* data, short v) const {
@@ -60,12 +69,22 @@ class FrontierDirectedSingleCycleSpec
     }
   }
 
+  int computeEnteredLevel(short v) const {
+    return m_ - fm_.getVerticesEnteringLevel(v);
+  }
+
  public:
-  FrontierDirectedSingleCycleSpec(const tdzdd::Digraph& graph)
+  FrontierDirectedSTPathSpec(const tdzdd::Digraph& graph, bool isHamiltonian,
+                             short s, short t)
       : graph_(graph),
         n_(static_cast<short>(graph_.vertexSize())),
         m_(graph_.edgeSize()),
-        fm_(graph_) {
+        isHamiltonian_(isHamiltonian),
+        s_(s),
+        t_(t),
+        fm_(graph_),
+        s_entered_level_(computeEnteredLevel(s)),
+        t_entered_level_(computeEnteredLevel(t)) {
     if (graph_.vertexSize() > SHRT_MAX) {  // SHRT_MAX == 32767
       std::cerr << "The number of vertices should be at most " << SHRT_MAX
                 << std::endl;
@@ -131,17 +150,33 @@ class FrontierDirectedSingleCycleSpec
     for (size_t i = 0; i < leaving_vs.size(); ++i) {
       int v = leaving_vs[i];
 
-      // The degree of v must be 0 or 2.
-      // in/out = 0/0 or 1/1
-      bool ok = (getIndeg(data, v) == 0 && getOutdeg(data, v) == 0) ||
-                (getIndeg(data, v) == 1 && getOutdeg(data, v) == 1);
-      if (!ok) {
-        return 0;
+      if (v == s_) {
+        if (getOutdeg(data, v) != 1 || getIndeg(data, v) != 0) {
+          return 0;
+        }
+      } else if (v == t_) {
+        // The degree of s and t must be 1.
+        if (getIndeg(data, v) != 1 || getOutdeg(data, v) != 0) {
+          return 0;
+        }
+      } else {
+        if (isHamiltonian_) {
+          // The degree of v (!= s, t) must be 2.
+          if (getIndeg(data, v) != 1 || getOutdeg(data, v) != 1) {
+            return 0;
+          }
+        } else {
+          // The degree of v (!= s, t) must be 0 or 2.
+          bool ok = (getIndeg(data, v) == 0 && getOutdeg(data, v) == 0) ||
+                    (getIndeg(data, v) == 1 && getOutdeg(data, v) == 1);
+          if (!ok) {
+            return 0;
+          }
+        }
       }
-
-      bool samecomp_found = false;
-      bool nonisolated_found = false;
-
+      bool comp_found = false;
+      bool deg_found = false;
+      bool frontier_exists = false;
       // Search a vertex that has the component number same as that of v.
       // Also check whether a vertex whose degree is at least 1 exists
       // on the frontier.
@@ -162,39 +197,49 @@ class FrontierDirectedSingleCycleSpec
         if (found_leaved) {
           continue;
         }
+        frontier_exists = true;
         // w has the component number same as that of v
         if (getComp(data, w) == getComp(data, v)) {
-          samecomp_found = true;
+          comp_found = true;
         }
         // The degree of w is at least 1.
         if (getIndeg(data, w) > 0 || getOutdeg(data, w) > 0) {
-          nonisolated_found = true;
+          deg_found = true;
         }
-        if (nonisolated_found && samecomp_found) {
+        if (deg_found && comp_found) {
           break;
         }
       }
       // There is no vertex that has the component number
       // same as that of v. That is, the connected component
       // of v becomes determined.
-      if (!samecomp_found) {
-        // Here, deg of v is 0 or 2.
-        assert((getIndeg(data, v) == 0 && getOutdeg(data, v) == 0) ||
-               (getIndeg(data, v) == 1 && getOutdeg(data, v) == 1));
-
-        // Check whether v is isolated.
-        // If v is isolated (deg of v is 0), nothing occurs.
-        if (getIndeg(data, v) > 0 || getOutdeg(data, v) > 0) {
-          // Check whether there is a
-          // connected component other than that of v,
-          // that is, the generated subgraph is not connected.
-          // If so, we return the 0-terminal.
-          if (nonisolated_found) {
-            return 0;  // return the 0-terminal.
+      if (!comp_found) {
+        // If deg of v is 0, this means that v is isolated.
+        // If deg of v is at least 1, and there is a vertex whose
+        // deg is at least 1, this means that there is a
+        // connected component other than that of v.
+        // That is, the generated subgraph is not connected.
+        // Then, we return the 0-terminal.
+        assert(getIndeg(data, v) <= 1 && getOutdeg(data, v) <= 1);
+        if (getIndeg(data, v) + getOutdeg(data, v) > 0 && deg_found) {
+          return 0;  // return the 0-terminal.
+        } else if (getIndeg(data, v) + getOutdeg(data, v) >
+                   0) {  // If deg of v is 2,
+          // and there is no vertex whose deg is at least 1,
+          // a single cycle is completed.
+          // Then, we return the 1-terminal.
+          if (isHamiltonian_) {
+            if (frontier_exists) {
+              return 0;
+            } else {
+              return -1;  // return the 1-terminal
+            }
           } else {
-            // Here, a single cycle is completed.
-            // Then, we return the 1-terminal.
-            return -1;  // return the 1-terminal
+            if (level > s_entered_level_ || level > t_entered_level_) {
+              return 0;
+            } else {
+              return -1;  // return the 1-terminal
+            }
           }
         }
       }
@@ -213,4 +258,4 @@ class FrontierDirectedSingleCycleSpec
   }
 };
 
-#endif  // FRONTIER_DIRECTED_SINGLE_CYCLE_HPP
+#endif  // FRONTIER_ST_PATH_HPP
