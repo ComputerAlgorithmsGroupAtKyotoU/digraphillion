@@ -1,5 +1,5 @@
-#ifndef FRONTIER_DIRECTED_SINGLE_CYCLE_HPP
-#define FRONTIER_DIRECTED_SINGLE_CYCLE_HPP
+#ifndef FRONTIER_SINGLE_HAMILTONIAN_CYCLE_HPP
+#define FRONTIER_SINGLE_HAMILTONIAN_CYCLE_HPP
 
 #include <climits>
 #include <vector>
@@ -11,8 +11,8 @@
 
 using namespace tdzdd;
 
-class FrontierDirectedSingleCycleSpec
-    : public tdzdd::PodArrayDdSpec<FrontierDirectedSingleCycleSpec,
+class FrontierDirectedSingleHamiltonianCycleSpec
+    : public tdzdd::PodArrayDdSpec<FrontierDirectedSingleHamiltonianCycleSpec,
                                    DirectedFrontierData, 2> {
  private:
   // input graph
@@ -24,22 +24,17 @@ class FrontierDirectedSingleCycleSpec
 
   const FrontierManager fm_;
 
-  // This function gets deg of v.
-  short getIndeg(DirectedFrontierData* data, short v) const {
-    return data[fm_.vertexToPos(v)].indeg;
-  }
+  // the level where all vertices enter the frontier
+  const int all_entered_level_;
 
-  short getOutdeg(DirectedFrontierData* data, short v) const {
-    return data[fm_.vertexToPos(v)].outdeg;
+  // This function gets deg of v.
+  short getDeg(DirectedFrontierData* data, short v) const {
+    return data[fm_.vertexToPos(v)].deg;
   }
 
   // This function sets deg of v to be d.
-  void setIndeg(DirectedFrontierData* data, short v, short d) const {
-    data[fm_.vertexToPos(v)].indeg = d;
-  }
-
-  void setOutdeg(DirectedFrontierData* data, short v, short d) const {
-    data[fm_.vertexToPos(v)].outdeg = d;
+  void setDeg(DirectedFrontierData* data, short v, short d) const {
+    data[fm_.vertexToPos(v)].deg = d;
   }
 
   // This function gets comp of v.
@@ -54,18 +49,18 @@ class FrontierDirectedSingleCycleSpec
 
   void initializeDegComp(DirectedFrontierData* data) const {
     for (int i = 0; i < fm_.getMaxFrontierSize(); ++i) {
-      data[i].indeg = 0;
-      data[i].outdeg = 0;
+      data[i].deg = 0;
       data[i].comp = 0;
     }
   }
 
  public:
-  FrontierDirectedSingleCycleSpec(const tdzdd::Digraph& graph)
+  FrontierDirectedSingleHamiltonianCycleSpec(const tdzdd::Digraph& graph)
       : graph_(graph),
         n_(static_cast<short>(graph_.vertexSize())),
         m_(graph_.edgeSize()),
-        fm_(graph_) {
+        fm_(graph_),
+        all_entered_level_(m_ - fm_.getAllVerticesEnteringLevel()) {
     if (graph_.vertexSize() > SHRT_MAX) {  // SHRT_MAX == 32767
       std::cerr << "The number of vertices should be at most " << SHRT_MAX
                 << std::endl;
@@ -86,15 +81,14 @@ class FrontierDirectedSingleCycleSpec
     const int edge_index = m_ - level;
     // edge that we are processing.
     // The endpoints of "edge" are edge.v1 and edge.v2.
-    const Digraph::EdgeInfo& edge = graph_.edgeInfo(edge_index);
+    const Graph::EdgeInfo& edge = graph_.edgeInfo(edge_index);
 
     // initialize deg and comp of the vertices newly entering the frontier
     const std::vector<int>& entering_vs = fm_.getEnteringVs(edge_index);
     for (size_t i = 0; i < entering_vs.size(); ++i) {
       int v = entering_vs[i];
       // initially the value of deg is 0
-      setIndeg(data, v, 0);
-      setOutdeg(data, v, 0);
+      setDeg(data, v, 0);
       // initially the value of comp is the vertex number itself
       setComp(data, v, v);
     }
@@ -104,14 +98,8 @@ class FrontierDirectedSingleCycleSpec
 
     if (value == 1) {  // if we take the edge (go to 1-arc)
       // increment deg of v1 and v2 (recall that edge = {v1, v2})
-      // 評価順序怪しそう?
-      auto outdeg1 = getOutdeg(data, edge.v1);
-      auto indeg2 = getIndeg(data, edge.v2);
-      // setIndeg(data, edge.v1, indeg1 + 1);
-      setIndeg(data, edge.v2, indeg2 + 1);
-
-      setOutdeg(data, edge.v1, outdeg1 + 1);
-      // setOutdeg(data, edge.v2, outdeg2 + 1);
+      setDeg(data, edge.v1, getDeg(data, edge.v1) + 1);
+      setDeg(data, edge.v2, getDeg(data, edge.v2) + 1);
 
       short c1 = getComp(data, edge.v1);
       short c2 = getComp(data, edge.v2);
@@ -134,16 +122,14 @@ class FrontierDirectedSingleCycleSpec
     for (size_t i = 0; i < leaving_vs.size(); ++i) {
       int v = leaving_vs[i];
 
-      // The degree of v must be 0 or 2.
-      // in/out = 0/0 or 1/1
-      bool ok = (getIndeg(data, v) == 0 && getOutdeg(data, v) == 0) ||
-                (getIndeg(data, v) == 1 && getOutdeg(data, v) == 1);
-      if (!ok) {
+      // The degree of v must be 2.
+      if (getDeg(data, v) != 2) {
         return 0;
       }
 
       bool samecomp_found = false;
       bool nonisolated_found = false;
+      bool frontier_exists = false;
 
       // Search a vertex that has the component number same as that of v.
       // Also check whether a vertex whose degree is at least 1 exists
@@ -165,12 +151,13 @@ class FrontierDirectedSingleCycleSpec
         if (found_leaved) {
           continue;
         }
+        frontier_exists = true;
         // w has the component number same as that of v
         if (getComp(data, w) == getComp(data, v)) {
           samecomp_found = true;
         }
         // The degree of w is at least 1.
-        if (getIndeg(data, w) > 0 || getOutdeg(data, w) > 0) {
+        if (getDeg(data, w) > 0) {
           nonisolated_found = true;
         }
         if (nonisolated_found && samecomp_found) {
@@ -181,30 +168,30 @@ class FrontierDirectedSingleCycleSpec
       // same as that of v. That is, the connected component
       // of v becomes determined.
       if (!samecomp_found) {
-        // Here, deg of v is 0 or 2.
-        assert((getIndeg(data, v) == 0 && getOutdeg(data, v) == 0) ||
-               (getIndeg(data, v) == 1 && getOutdeg(data, v) == 1));
+        // Here, deg of v is 2.
+        assert(getDeg(data, v) == 2);
 
-        // Check whether v is isolated.
-        // If v is isolated (deg of v is 0), nothing occurs.
-        if (getIndeg(data, v) > 0 || getOutdeg(data, v) > 0) {
-          // Check whether there is a
-          // connected component other than that of v,
-          // that is, the generated subgraph is not connected.
-          // If so, we return the 0-terminal.
-          if (nonisolated_found) {
-            return 0;  // return the 0-terminal.
+        // Check whether there is a connected component
+        // other than that of v, that is, the generated subgraph
+        // is not connected.
+        // If so, we return the 0-terminal.
+        if (nonisolated_found) {
+          return 0;  // return the 0-terminal.
+        } else {
+          // Here, a single Hamiltonian cycle is completed.
+          if (frontier_exists) {
+            return 0;  // return the 0-terminal
+          } else if (level > all_entered_level_) {
+            // Some vertices have not entered the frontier yet.
+            return 0;  // return the 0-terminal
           } else {
-            // Here, a single cycle is completed.
-            // Then, we return the 1-terminal.
             return -1;  // return the 1-terminal
           }
         }
       }
       // Since deg and comp of v are never used until the end,
       // we erase the values.
-      setIndeg(data, v, -1);
-      setOutdeg(data, v, -1);
+      setDeg(data, v, -1);
       setComp(data, v, -1);
     }
     if (level == 1) {
@@ -216,4 +203,4 @@ class FrontierDirectedSingleCycleSpec
   }
 };
 
-#endif  // FRONTIER_DIRECTED_SINGLE_CYCLE_HPP
+#endif  // FRONTIER_SINGLE_HAMILTONIAN_CYCLE_HPP
