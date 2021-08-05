@@ -136,10 +136,10 @@ static int setset_parse_set(PyObject* so, std::set<int>* s) {
 }
 
 static std::vector<int> intersection(
-    const std::map<std::string, std::vector<int> >& m, const std::string& key1,
+    const std::map<std::string, std::vector<int>>& m, const std::string& key1,
     const std::string& key2) {
-  std::map<std::string, std::vector<int> >::const_iterator in_i = m.find(key1);
-  std::map<std::string, std::vector<int> >::const_iterator ex_i = m.find(key2);
+  std::map<std::string, std::vector<int>>::const_iterator in_i = m.find(key1);
+  std::map<std::string, std::vector<int>>::const_iterator ex_i = m.find(key2);
   std::vector<int> in_v = in_i != m.end() ? in_i->second : std::vector<int>();
   std::vector<int> ex_v = ex_i != m.end() ? ex_i->second : std::vector<int>();
   std::sort(in_v.begin(), in_v.end());
@@ -152,7 +152,7 @@ static std::vector<int> intersection(
 }
 
 static int setset_parse_map(PyObject* dict_obj,
-                            std::map<std::string, std::vector<int> >* m) {
+                            std::map<std::string, std::vector<int>>* m) {
   assert(m != NULL);
   PyObject* key_obj;
   PyObject* lo;
@@ -294,7 +294,7 @@ static int setset_init(PySetsetObject* self, PyObject* args, PyObject* kwds) {
   } else if (PyList_Check(obj)) {
     PyObject* i = PyObject_GetIter(obj);
     if (i == NULL) return -1;
-    std::vector<std::set<int> > vs;
+    std::vector<std::set<int>> vs;
     PyObject* o;
     while ((o = PyIter_Next(i))) {
       if (!PyAnySet_Check(o)) {
@@ -309,7 +309,7 @@ static int setset_init(PySetsetObject* self, PyObject* args, PyObject* kwds) {
     Py_DECREF(i);
     self->ss = new digraphillion::setset(vs);
   } else if (PyDict_Check(obj)) {
-    std::map<std::string, std::vector<int> > m;
+    std::map<std::string, std::vector<int>> m;
     if (setset_parse_map(obj, &m) == -1) return -1;
     self->ss = new digraphillion::setset(m);
   } else {
@@ -1147,6 +1147,38 @@ static PyObject* setset_num_elems(PyObject*, PyObject* args) {
   }
 }
 
+bool input_graph(PyObject* graph_obj,
+                 std::vector<std::pair<std::string, std::string>>& graph) {
+  if (graph_obj == NULL || graph_obj == Py_None) {
+    PyErr_SetString(PyExc_TypeError, "no graph");
+    return false;
+  }
+  PyObject* i = PyObject_GetIter(graph_obj);
+  if (i == NULL) return false;
+  PyObject* eo;
+  while ((eo = PyIter_Next(i))) {
+    PyObject* j = PyObject_GetIter(eo);
+    if (j == NULL) return false;
+    std::vector<std::string> e;
+    PyObject* vo;
+    while ((vo = PyIter_Next(j))) {
+      if (!PyBytes_Check(vo)) {
+        PyErr_SetString(PyExc_TypeError, "invalid graph");
+        return false;
+      }
+      std::string v = PyBytes_AsString(vo);
+      if (v.find(',') != std::string::npos) {
+        PyErr_SetString(PyExc_TypeError, "invalid vertex in the graph");
+        return false;
+      }
+      e.push_back(v);
+    }
+    assert(e.size() == 2);
+    graph.push_back(make_pair(e[0], e[1]));
+  }
+  return true;
+}
+
 static PyObject* graphset_directed_cycles(PyObject*, PyObject* args,
                                           PyObject* kwds) {
   static char s1[] = "graph";
@@ -1158,33 +1190,9 @@ static PyObject* graphset_directed_cycles(PyObject*, PyObject* args,
                                    &search_space_obj))
     return NULL;
 
-  std::vector<std::pair<std::string, std::string> > graph;
-  if (graph_obj == NULL || graph_obj == Py_None) {
-    PyErr_SetString(PyExc_TypeError, "no graph");
+  std::vector<std::pair<std::string, std::string>> graph;
+  if (!input_graph(graph_obj, graph)) {
     return NULL;
-  }
-  PyObject* i = PyObject_GetIter(graph_obj);
-  if (i == NULL) return NULL;
-  PyObject* eo;
-  while ((eo = PyIter_Next(i))) {
-    PyObject* j = PyObject_GetIter(eo);
-    if (j == NULL) return NULL;
-    std::vector<std::string> e;
-    PyObject* vo;
-    while ((vo = PyIter_Next(j))) {
-      if (!PyBytes_Check(vo)) {
-        PyErr_SetString(PyExc_TypeError, "invalid graph");
-        return NULL;
-      }
-      std::string v = PyBytes_AsString(vo);
-      if (v.find(',') != std::string::npos) {
-        PyErr_SetString(PyExc_TypeError, "invalid vertex in the graph");
-        return NULL;
-      }
-      e.push_back(v);
-    }
-    assert(e.size() == 2);
-    graph.push_back(make_pair(e[0], e[1]));
   }
 
   digraphillion::setset* search_space = NULL;
@@ -1211,33 +1219,9 @@ static PyObject* graphset_directed_hamiltonian_cycles(PyObject*, PyObject* args,
                                    &search_space_obj))
     return NULL;
 
-  std::vector<std::pair<std::string, std::string> > graph;
-  if (graph_obj == NULL || graph_obj == Py_None) {
-    PyErr_SetString(PyExc_TypeError, "no graph");
+  std::vector<std::pair<std::string, std::string>> graph;
+  if (!input_graph(graph_obj, graph)) {
     return NULL;
-  }
-  PyObject* i = PyObject_GetIter(graph_obj);
-  if (i == NULL) return NULL;
-  PyObject* eo;
-  while ((eo = PyIter_Next(i))) {
-    PyObject* j = PyObject_GetIter(eo);
-    if (j == NULL) return NULL;
-    std::vector<std::string> e;
-    PyObject* vo;
-    while ((vo = PyIter_Next(j))) {
-      if (!PyBytes_Check(vo)) {
-        PyErr_SetString(PyExc_TypeError, "invalid graph");
-        return NULL;
-      }
-      std::string v = PyBytes_AsString(vo);
-      if (v.find(',') != std::string::npos) {
-        PyErr_SetString(PyExc_TypeError, "invalid vertex in the graph");
-        return NULL;
-      }
-      e.push_back(v);
-    }
-    assert(e.size() == 2);
-    graph.push_back(make_pair(e[0], e[1]));
   }
 
   digraphillion::setset* search_space = NULL;
@@ -1266,42 +1250,18 @@ static PyObject* graphset_directed_st_path(PyObject*, PyObject* args,
   PyObject* s_obj = NULL;
   PyObject* t_obj = NULL;
   PyObject* search_space_obj = NULL;
-  if (!PyArg_ParseTupleAndKeywords(args, kwds, "OSS|pO", kwlist, &graph_obj,
+  if (!PyArg_ParseTupleAndKeywords(args, kwds, "OSSp|O", kwlist, &graph_obj,
                                    &s_obj, &t_obj, &is_hamiltonian,
                                    &search_space_obj))
     return NULL;
 
-  std::vector<std::pair<std::string, std::string> > graph;
-  if (graph_obj == NULL || graph_obj == Py_None) {
-    PyErr_SetString(PyExc_TypeError, "no graph");
+  std::vector<std::pair<std::string, std::string>> graph;
+  if (!input_graph(graph_obj, graph)) {
     return NULL;
-  }
-  PyObject* i = PyObject_GetIter(graph_obj);
-  if (i == NULL) return NULL;
-  PyObject* eo;
-  while ((eo = PyIter_Next(i))) {
-    PyObject* j = PyObject_GetIter(eo);
-    if (j == NULL) return NULL;
-    std::vector<std::string> e;
-    PyObject* vo;
-    while ((vo = PyIter_Next(j))) {
-      if (!PyBytes_Check(vo)) {
-        PyErr_SetString(PyExc_TypeError, "invalid graph");
-        return NULL;
-      }
-      std::string v = PyBytes_AsString(vo);
-      if (v.find(',') != std::string::npos) {
-        PyErr_SetString(PyExc_TypeError, "invalid vertex in the graph");
-        return NULL;
-      }
-      e.push_back(v);
-    }
-    assert(e.size() == 2);
-    graph.push_back(make_pair(e[0], e[1]));
   }
 
   std::string s, t;
-  if(s_obj == NULL || s_obj == Py_None){
+  if (s_obj == NULL || s_obj == Py_None) {
     PyErr_SetString(PyExc_TypeError, "no vertex s");
     return NULL;
   }
@@ -1311,7 +1271,7 @@ static PyObject* graphset_directed_st_path(PyObject*, PyObject* args,
   }
   s = PyBytes_AsString(s_obj);
 
-  if(t_obj == NULL || t_obj == Py_None){
+  if (t_obj == NULL || t_obj == Py_None) {
     PyErr_SetString(PyExc_TypeError, "no vertex t");
     return NULL;
   }
