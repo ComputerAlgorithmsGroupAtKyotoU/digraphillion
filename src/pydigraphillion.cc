@@ -1201,7 +1201,7 @@ static PyObject* graphset_directed_cycles(PyObject*, PyObject* args,
 }
 
 static PyObject* graphset_directed_hamiltonian_cycles(PyObject*, PyObject* args,
-                                          PyObject* kwds) {
+                                                      PyObject* kwds) {
   static char s1[] = "graph";
   static char s2[] = "search_space";
   static char* kwlist[9] = {s1, s2, NULL};
@@ -1270,7 +1270,7 @@ static PyMethodDef module_methods[] = {
     {"_directed_cycles",
      reinterpret_cast<PyCFunction>(graphset_directed_cycles),
      METH_VARARGS | METH_KEYWORDS, ""},
-     {"_directed_hamiltonian_cycles",
+    {"_directed_hamiltonian_cycles",
      reinterpret_cast<PyCFunction>(graphset_directed_hamiltonian_cycles),
      METH_VARARGS | METH_KEYWORDS, ""},
     {"_show_messages", reinterpret_cast<PyCFunction>(graphset_show_messages),

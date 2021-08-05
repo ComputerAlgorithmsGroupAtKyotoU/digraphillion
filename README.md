@@ -10,9 +10,10 @@
 
 ## methods
 
-| Method                                       | Description            |
-| :------------------------------------------- | :--------------------- |
-| Returns a new GraphSet with graphs from `gs` | `gs.directed_cycles()` |
+| Method                                                                     | Description                        |
+| :------------------------------------------------------------------------- | :--------------------------------- |
+| Returns a new DiGraphSet with directed single cycles from `gs`             | `gs.directed_cycles()`             |
+| Returns a new DiGraphSet with directed single hamiltonian cycles from `gs` | `gs.directed_hamiltonian_cycles()` |
 
 ## Graphillion からの変更点 (for Developers)
 
@@ -23,6 +24,7 @@
   - `_traverse` で双方向の辺に対応
 - `src/subsetting/util/Digraph.hpp`
   - 双方向辺に対応
+- python2, cygwin 等の動作に必要な部分は割愛
 
 ## References
 
