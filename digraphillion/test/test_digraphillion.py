@@ -29,8 +29,8 @@ universe_edges = [e1, e2, e3, e4, e5, e6, e7, e8, e9,
 
 class TestDiGraphSet(unittest.TestCase):
     def test_init(self):
-        s = DiGraphSet()
-        print(s)
+        gs = DiGraphSet()
+        self.assertEqual(len(gs), 0)
 
     def test_directed_cycles(self):
         DiGraphSet.set_universe(universe_edges)
@@ -87,6 +87,22 @@ class TestDiGraphSet(unittest.TestCase):
                 path = DiGraphSet.directed_st_path(s, t, False)
                 hamiltonian = DiGraphSet.directed_st_path(s, t, True)
                 self.assertTrue(hamiltonian.issubset(path))
+
+    def test_directed_forests(self):
+        DiGraphSet.set_universe(universe_edges)
+        gs = DiGraphSet.directed_forests()
+
+        self.assertTrue([(1, 2), (2, 3), (3, 6), (6, 5), (5, 4)] in gs)
+        self.assertTrue([(5, 4), (4, 1), (5, 6), (6, 3)] in gs)
+        self.assertTrue([(4, 1), (4, 5), (2, 3), (3, 6)] in gs)
+        self.assertTrue([(2, 1), (2, 5), (2, 3)] in gs)
+        self.assertTrue([(5, 2), (6, 3)] in gs)
+        self.assertTrue([(1, 4)] in gs)
+        self.assertTrue([] in gs)
+
+        self.assertTrue([(2, 1), (4, 1)] not in gs)
+        self.assertTrue([(1, 2), (2, 5), (5, 2), (2, 1)] not in gs)
+        self.assertTrue([(1, 2), (2, 1)] not in gs)
 
 
 if __name__ == '__main__':

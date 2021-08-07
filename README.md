@@ -15,6 +15,7 @@
 | `gs.directed_cycles()`                      | Returns a new DiGraphSet with directed single cycles from `gs`             |
 | `gs.directed_hamiltonian_cycles()`          | Returns a new DiGraphSet with directed single hamiltonian cycles from `gs` |
 | `gs.directed_st_path(s, t, is_hamiltonian)` | Returns a new DiGraphSet with directed st path from `gs`                   |
+| `gs.directed_forests()`                     | Returns a new DiGraphSet with directed forests (branching) from `gs`       |
 
 ## Graphillion からの変更点 (for Developers)
 

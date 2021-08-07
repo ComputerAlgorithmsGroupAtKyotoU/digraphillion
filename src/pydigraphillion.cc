@@ -1294,6 +1294,35 @@ static PyObject* graphset_directed_st_path(PyObject*, PyObject* args,
   return reinterpret_cast<PyObject*>(ret);
 }
 
+static PyObject* graphset_directed_forests(PyObject*, PyObject* args,
+                                           PyObject* kwds) {
+  static char s1[] = "graph";
+  static char s2[] = "search_space";
+  static char* kwlist[3] = {s1, s2, NULL};
+  PyObject* graph_obj = NULL;
+  PyObject* search_space_obj = NULL;
+  if (!PyArg_ParseTupleAndKeywords(args, kwds, "O|O", kwlist, &graph_obj,
+                                   &search_space_obj))
+    return NULL;
+
+  std::vector<std::pair<std::string, std::string>> graph;
+  if (!input_graph(graph_obj, graph)) {
+    return NULL;
+  }
+
+  digraphillion::setset* search_space = NULL;
+  if (search_space_obj != NULL && search_space_obj != Py_None)
+    search_space = reinterpret_cast<PySetsetObject*>(search_space_obj)->ss;
+
+  digraphillion::setset ss =
+      digraphillion::SearchDirectedForests(graph, search_space);
+
+  PySetsetObject* ret = reinterpret_cast<PySetsetObject*>(
+      PySetset_Type.tp_alloc(&PySetset_Type, 0));
+  ret->ss = new digraphillion::setset(ss);
+  return reinterpret_cast<PyObject*>(ret);
+}
+
 static PyObject* graphset_show_messages(PySetsetObject* self, PyObject* obj) {
   int ret = digraphillion::ShowMessages(PyObject_IsTrue(obj));
   if (ret)
@@ -1316,6 +1345,9 @@ static PyMethodDef module_methods[] = {
      METH_VARARGS | METH_KEYWORDS, ""},
     {"_directed_st_path",
      reinterpret_cast<PyCFunction>(graphset_directed_st_path),
+     METH_VARARGS | METH_KEYWORDS, ""},
+    {"_directed_forests",
+     reinterpret_cast<PyCFunction>(graphset_directed_forests),
      METH_VARARGS | METH_KEYWORDS, ""},
     {"_show_messages", reinterpret_cast<PyCFunction>(graphset_show_messages),
      METH_O, ""},

@@ -26,6 +26,24 @@ class FrontierDirectedForestSpec
 
   const FrontierManager fm_;
 
+  // This function gets deg of v.
+  short getIndeg(DirectedFrontierData* data, short v) const {
+    return data[fm_.vertexToPos(v)].indeg;
+  }
+
+  short getOutdeg(DirectedFrontierData* data, short v) const {
+    return data[fm_.vertexToPos(v)].outdeg;
+  }
+
+  // This function sets deg of v to be d.
+  void setIndeg(DirectedFrontierData* data, short v, short d) const {
+    data[fm_.vertexToPos(v)].indeg = d;
+  }
+
+  void setOutdeg(DirectedFrontierData* data, short v, short d) const {
+    data[fm_.vertexToPos(v)].outdeg = d;
+  }
+
   // This function gets comp of v.
   ushort getComp(DirectedFrontierData* data, short v) const {
     return data[fm_.vertexToPos(v)].comp;
@@ -76,6 +94,9 @@ class FrontierDirectedForestSpec
     const std::vector<int>& entering_vs = fm_.getEnteringVs(edge_index);
     for (size_t i = 0; i < entering_vs.size(); ++i) {
       int v = entering_vs[i];
+      // initially the value of deg is 0
+      setIndeg(data, v, 0);
+      setOutdeg(data, v, 0);
       // initially the value of comp is the vertex number itself
       setComp(data, v, static_cast<ushort>(v));
     }
@@ -84,6 +105,13 @@ class FrontierDirectedForestSpec
     const std::vector<int>& frontier_vs = fm_.getFrontierVs(edge_index);
 
     if (value == 1) {  // if we take the edge (go to 1-arc)
+      // increment deg of v1 and v2 (recall that edge = {v1, v2})
+      auto outdeg1 = getOutdeg(data, edge.v1);
+      auto indeg2 = getIndeg(data, edge.v2);
+
+      setIndeg(data, edge.v2, indeg2 + 1);
+      setOutdeg(data, edge.v1, outdeg1 + 1);
+
       ushort c1 = getComp(data, edge.v1);
       ushort c2 = getComp(data, edge.v2);
 
@@ -110,8 +138,15 @@ class FrontierDirectedForestSpec
     for (size_t i = 0; i < leaving_vs.size(); ++i) {
       int v = leaving_vs[i];
 
+      // the in-degree of v must be 0 or 1.
+      if (getIndeg(data, v) > 1) {
+        return 0;
+      }
+
       // Since deg and comp of v are never used until the end,
       // we erase the values.
+      setIndeg(data, v, 0);
+      setOutdeg(data, v, 0);
       setComp(data, v, 0);
     }
     if (level == 1) {
