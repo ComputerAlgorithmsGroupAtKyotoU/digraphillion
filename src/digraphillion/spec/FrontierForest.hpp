@@ -13,13 +13,12 @@ using namespace tdzdd;
 
 typedef unsigned short ushort;
 
-typedef unsigned short FrontierForestData;
-
-class FrontierForestSpec
-    : public tdzdd::PodArrayDdSpec<FrontierForestSpec, FrontierForestData, 2> {
+class FrontierDirectedForestSpec
+    : public tdzdd::PodArrayDdSpec<FrontierDirectedForestSpec,
+                                   DirectedFrontierData, 2> {
  private:
   // input graph
-  const tdzdd::Graph& graph_;
+  const tdzdd::Digraph& graph_;
   // number of vertices
   const short n_;
   // number of edges
@@ -28,23 +27,25 @@ class FrontierForestSpec
   const FrontierManager fm_;
 
   // This function gets comp of v.
-  ushort getComp(FrontierForestData* data, short v) const {
-    return data[fm_.vertexToPos(v)];
+  ushort getComp(DirectedFrontierData* data, short v) const {
+    return data[fm_.vertexToPos(v)].comp;
   }
 
   // This function sets comp of v to be c.
-  void setComp(FrontierForestData* data, short v, ushort c) const {
-    data[fm_.vertexToPos(v)] = c;
+  void setComp(DirectedFrontierData* data, short v, ushort c) const {
+    data[fm_.vertexToPos(v)].comp = c;
   }
 
-  void initializeData(FrontierForestData* data) const {
+  void initializeData(DirectedFrontierData* data) const {
     for (int i = 0; i < fm_.getMaxFrontierSize(); ++i) {
-      data[i] = 0;
+      data[i].indeg = 0;
+      data[i].outdeg = 0;
+      data[i].comp = 0;
     }
   }
 
  public:
-  FrontierForestSpec(const tdzdd::Graph& graph)
+  FrontierDirectedForestSpec(const tdzdd::Digraph& graph)
       : graph_(graph),
         n_(static_cast<short>(graph_.vertexSize())),
         m_(graph_.edgeSize()),
@@ -57,19 +58,19 @@ class FrontierForestSpec
     setArraySize(fm_.getMaxFrontierSize());
   }
 
-  int getRoot(FrontierForestData* data) const {
+  int getRoot(DirectedFrontierData* data) const {
     initializeData(data);
     return m_;
   }
 
-  int getChild(FrontierForestData* data, int level, int value) const {
+  int getChild(DirectedFrontierData* data, int level, int value) const {
     assert(1 <= level && level <= m_);
 
     // edge index (starting from 0)
     const int edge_index = m_ - level;
     // edge that we are processing.
     // The endpoints of "edge" are edge.v1 and edge.v2.
-    const Graph::EdgeInfo& edge = graph_.edgeInfo(edge_index);
+    const Digraph::EdgeInfo& edge = graph_.edgeInfo(edge_index);
 
     // initialize deg and comp of the vertices newly entering the frontier
     const std::vector<int>& entering_vs = fm_.getEnteringVs(edge_index);
