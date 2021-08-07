@@ -1326,14 +1326,16 @@ static PyObject* graphset_directed_forests(PyObject*, PyObject* args,
 static PyObject* graphset_rooted_trees(PyObject*, PyObject* args,
                                        PyObject* kwds) {
   static char s1[] = "graph";
-  static char s2[] = "is_spanning";
-  static char s3[] = "search_space";
-  static char* kwlist[] = {s1, s2, s3, NULL};
+  static char s2[] = "root";
+  static char s3[] = "is_spanning";
+  static char s4[] = "search_space";
+  static char* kwlist[] = {s1, s2, s3, s4, NULL};
   PyObject* graph_obj = NULL;
   PyObject* search_space_obj = NULL;
+  PyObject* root_obj = NULL;
   int is_spanning = false;
-  if (!PyArg_ParseTupleAndKeywords(args, kwds, "Op|O", kwlist, &graph_obj,
-                                   &is_spanning, &search_space_obj))
+  if (!PyArg_ParseTupleAndKeywords(args, kwds, "OSp|O", kwlist, &graph_obj,
+                                   &root_obj, &is_spanning, &search_space_obj))
     return NULL;
 
   std::vector<std::pair<std::string, std::string>> graph;
@@ -1341,12 +1343,23 @@ static PyObject* graphset_rooted_trees(PyObject*, PyObject* args,
     return NULL;
   }
 
+  std::string root;
+  if (root_obj == NULL || root_obj == Py_None) {
+    PyErr_SetString(PyExc_TypeError, "no vertex root");
+    return NULL;
+  }
+  if (!PyBytes_Check(root_obj)) {
+    PyErr_SetString(PyExc_TypeError, "invalid vertex root");
+    return NULL;
+  }
+  root = PyBytes_AsString(root_obj);
+
   digraphillion::setset* search_space = NULL;
   if (search_space_obj != NULL && search_space_obj != Py_None)
     search_space = reinterpret_cast<PySetsetObject*>(search_space_obj)->ss;
 
   digraphillion::setset ss =
-      digraphillion::SearchRootedTrees(graph, is_spanning, search_space);
+      digraphillion::SearchRootedTrees(graph, root, is_spanning, search_space);
 
   PySetsetObject* ret = reinterpret_cast<PySetsetObject*>(
       PySetset_Type.tp_alloc(&PySetset_Type, 0));

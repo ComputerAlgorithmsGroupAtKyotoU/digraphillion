@@ -1699,7 +1699,7 @@ class DiGraphSet(object):
         return DiGraphSet(ss)
 
     @staticmethod
-    def rooted_trees(is_spanning=False, graphset=None):
+    def rooted_trees(root, is_spanning=False, graphset=None):
         graph = []
         for e in setset.universe():
             assert e[0] in DiGraphSet._vertices and e[1] in DiGraphSet._vertices
@@ -1709,7 +1709,7 @@ class DiGraphSet(object):
         ss = None if graphset is None else graphset._ss
 
         ss = _digraphillion._rooted_trees(
-            graph=graph, is_spanning=is_spanning, search_space=ss)
+            graph=graph, root=pickle.dumps(root, protocol=0), is_spanning=is_spanning, search_space=ss)
         return DiGraphSet(ss)
 
     @staticmethod

@@ -104,12 +104,36 @@ class TestDiGraphSet(unittest.TestCase):
         self.assertTrue([(1, 2), (2, 5), (5, 2), (2, 1)] not in gs)
         self.assertTrue([(1, 2), (2, 1)] not in gs)
 
+    def test_rooted_spanning_trees(self):
+        DiGraphSet.set_universe(universe_edges)
+        root = 1
+        is_spanning = True
+
+        gs = DiGraphSet.rooted_trees(root, is_spanning)
+        self.assertEqual(len(gs), 15)  # det(L)
+        self.assertTrue([(1, 2), (2, 3), (1, 4), (2, 5), (3, 6)] in gs)
+        self.assertTrue([(1, 2), (2, 3), (4, 1), (2, 5), (3, 6)] not in gs)
+        for rooted_tree in gs:
+            self.assertEqual(len(rooted_tree), 5)
+            self.assertTrue((1, 2) in rooted_tree or (1, 4) in rooted_tree)
+
     def test_rooted_trees(self):
         DiGraphSet.set_universe(universe_edges)
-        is_spanning = True
-        gs = DiGraphSet.rooted_trees(is_spanning)
-        for gg in gs:
-            print(gg)
+        root = 1
+        is_spanning = False
+
+        gs = DiGraphSet.rooted_trees(root, is_spanning)
+        gs.issubset(DiGraphSet.rooted_trees(root, True))
+
+        self.assertTrue([(1, 2)] in gs)
+        self.assertTrue([(1, 2), (1, 4)] in gs)
+        self.assertTrue([(1, 2), (1, 4), (4, 5)] in gs)
+        self.assertTrue([(1, 2), (1, 4), (4, 5), (5, 6)] in gs)
+        self.assertTrue([(1, 2), (1, 4), (4, 5), (5, 6), (6, 3)] in gs)
+
+        self.assertTrue([(4, 1)] not in gs)
+        self.assertTrue([(2, 3)] not in gs)
+        self.assertTrue([(1, 2), (2, 5), (5, 4), (4, 1)] not in gs)
 
 
 if __name__ == '__main__':

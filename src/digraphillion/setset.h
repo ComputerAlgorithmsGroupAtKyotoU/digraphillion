@@ -182,7 +182,8 @@ class setset {
   friend setset SearchDirectedForests(const std::vector<edge_t>& digraph,
                                       const setset* search_space);
   friend setset SearchRootedTrees(const std::vector<edge_t>& digraph,
-                                  bool is_spanning, const setset* search_space);
+                                  vertex_t root, bool is_spanning,
+                                  const setset* search_space);
 };
 
 }  // namespace digraphillion

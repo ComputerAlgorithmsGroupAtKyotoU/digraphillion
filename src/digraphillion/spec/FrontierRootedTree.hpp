@@ -26,6 +26,9 @@ class FrontierRootedTreeSpec
   // number of edges
   const int m_;
 
+  // root node
+  const ushort root_;
+
   const bool isSpanning_;
 
   const FrontierManager fm_;
@@ -72,10 +75,12 @@ class FrontierRootedTreeSpec
   }
 
  public:
-  FrontierRootedTreeSpec(const tdzdd::Digraph& graph, bool isSpanning)
+  FrontierRootedTreeSpec(const tdzdd::Digraph& graph, ushort root,
+                         bool isSpanning)
       : graph_(graph),
         n_(graph_.vertexSize()),
         m_(graph_.edgeSize()),
+        root_(root),
         isSpanning_(isSpanning),
         fm_(graph_) {
     if (n_ >= (1 << 15)) {
@@ -152,9 +157,20 @@ class FrontierRootedTreeSpec
         }
       }
 
-      // the in-degree of v must be 0 or 1.
-      if (getIndeg(data, v) > 1) {
-        return 0;
+      if (v == root_) {
+        // the in-degree of root node must be 0.
+        if (getIndeg(data, v) != 0) {
+          return 0;
+        }
+        // the out-degdee of root node must not be 0.
+        if (getOutdeg(data, v) == 0) {
+          return 0;
+        }
+      } else {
+        // in-degree of non-root node must be 0 or 1.
+        if (getIndeg(data, v) > 1) {
+          return 0;
+        }
       }
 
       // The degree of v must be 0 or 2.
