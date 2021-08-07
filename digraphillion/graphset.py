@@ -1687,6 +1687,19 @@ class DiGraphSet(object):
         return DiGraphSet(ss)
 
     @staticmethod
+    def directed_forests(graphset=None):
+        graph = []
+        for e in setset.universe():
+            assert e[0] in DiGraphSet._vertices and e[1] in DiGraphSet._vertices
+            graph.append(
+                (pickle.dumps(e[0], protocol=0), pickle.dumps(e[1], protocol=0)))
+
+        ss = None if graphset is None else graphset._ss
+
+        ss = _digraphillion._directed_forests(graph=graph, search_space=ss)
+        return DiGraphSet(ss)
+
+    @staticmethod
     def show_messages(flag=True):
         """Enables/disables status messages.
 
