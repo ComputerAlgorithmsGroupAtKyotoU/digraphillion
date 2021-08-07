@@ -27,6 +27,10 @@ setset SearchDirectedCycles(const std::vector<edge_t>& digraph,
 setset SearchDirectedHamiltonianCycles(const std::vector<edge_t>& digraph,
                                        const setset* search_space);
 
+setset SearchDirectedSTPath(const std::vector<edge_t>& digraph,
+                            bool is_hamiltonian, vertex_t s, vertex_t t,
+                            const setset* search_space);
+
 bool ShowMessages(bool flag = true);
 
 }  // namespace digraphillion

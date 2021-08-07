@@ -55,6 +55,39 @@ class TestDiGraphSet(unittest.TestCase):
         self.assertTrue([(1, 2), (2, 3), (3, 6), (6, 5), (5, 4), (4, 1)] in gs)
         self.assertTrue([(1, 2), (2, 3)] not in gs)
 
+    def test_directed_st_path(self):
+        DiGraphSet.set_universe(universe_edges)
+        s, t = 1, 6
+        gs = DiGraphSet.directed_st_path(s, t, False)
+        self.assertTrue([(1, 4), (4, 5), (5, 6)] in gs)
+        self.assertTrue([(1, 4), (4, 5), (5, 2), (2, 3), (3, 6)] in gs)
+        self.assertTrue([(1, 4), (4, 5)] not in gs)
+        self.assertEqual(len(gs), 4)
+
+    def test_directed_st_hamiltonian_path(self):
+        DiGraphSet.set_universe(universe_edges)
+        s, t = 1, 6
+        s_to_t = [(1, 4), (4, 5), (5, 2), (2, 3), (3, 6)]
+        t_to_s = [(6, 3), (3, 2), (2, 5), (5, 4), (4, 1)]
+
+        gs = DiGraphSet.directed_st_path(s, t, True)
+        self.assertTrue(s_to_t in gs)
+        self.assertTrue(t_to_s not in gs)
+        self.assertEqual(len(gs), 1)
+
+        gs = DiGraphSet.directed_st_path(t, s, True)
+        self.assertTrue(s_to_t not in gs)
+        self.assertTrue(t_to_s in gs)
+        self.assertEqual(len(gs), 1)
+
+    def test_hamiltonian_path_in_path(self):
+        DiGraphSet.set_universe(universe_edges)
+        for s in range(1, 7):
+            for t in range(1, 7):
+                path = DiGraphSet.directed_st_path(s, t, False)
+                hamiltonian = DiGraphSet.directed_st_path(s, t, True)
+                self.assertTrue(hamiltonian.issubset(path))
+
 
 if __name__ == '__main__':
     unittest.main()
