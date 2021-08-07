@@ -1244,9 +1244,9 @@ static PyObject* graphset_directed_st_path(PyObject*, PyObject* args,
   static char s3[] = "t";
   static char s4[] = "is_hamiltonian";
   static char s5[] = "search_space";
-  static char* kwlist[6] = {s1, s2, s3, s4, s5, NULL};
+  static char* kwlist[] = {s1, s2, s3, s4, s5, NULL};
   PyObject* graph_obj = NULL;
-  bool is_hamiltonian = false;
+  int is_hamiltonian = false;
   PyObject* s_obj = NULL;
   PyObject* t_obj = NULL;
   PyObject* search_space_obj = NULL;

@@ -1680,11 +1680,9 @@ class DiGraphSet(object):
         ss = None if graphset is None else graphset._ss
 
         assert(s in DiGraphSet._vertices and t in DiGraphSet._vertices)
-        s_bytes = pickle.dumps(s, protocol=0)
-        t_bytes = pickle.dumps(t, protocol=0)
 
         ss = _digraphillion._directed_st_path(
-            graph=graph, s=s_bytes, t=t_bytes,
+            graph=graph, s=pickle.dumps(s, protocol=0), t=pickle.dumps(t, protocol=0),
             is_hamiltonian=is_hamiltonian, search_space=ss)
         return DiGraphSet(ss)
 
