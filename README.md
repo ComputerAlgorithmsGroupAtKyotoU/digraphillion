@@ -10,10 +10,11 @@
 
 ## methods
 
-| Method                                                                     | Description                        |
-| :------------------------------------------------------------------------- | :--------------------------------- |
-| Returns a new DiGraphSet with directed single cycles from `gs`             | `gs.directed_cycles()`             |
-| Returns a new DiGraphSet with directed single hamiltonian cycles from `gs` | `gs.directed_hamiltonian_cycles()` |
+| Method                                      | Description                                                                |
+| :------------------------------------------ | :------------------------------------------------------------------------- |
+| `gs.directed_cycles()`                      | Returns a new DiGraphSet with directed single cycles from `gs`             |
+| `gs.directed_hamiltonian_cycles()`          | Returns a new DiGraphSet with directed single hamiltonian cycles from `gs` |
+| `gs.directed_st_path(s, t, is_hamiltonian)` | Returns a new DiGraphSet with directed st path from `gs`                   |
 
 ## Graphillion からの変更点 (for Developers)
 
