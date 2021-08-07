@@ -180,7 +180,9 @@ class setset {
                                      bool is_hamiltonian, vertex_t s,
                                      vertex_t t, const setset* search_space);
   friend setset SearchDirectedForests(const std::vector<edge_t>& digraph,
-                                     const setset* search_space);
+                                      const setset* search_space);
+  friend setset SearchRootedTrees(const std::vector<edge_t>& digraph,
+                                  bool is_spanning, const setset* search_space);
 };
 
 }  // namespace digraphillion

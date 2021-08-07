@@ -1323,6 +1323,37 @@ static PyObject* graphset_directed_forests(PyObject*, PyObject* args,
   return reinterpret_cast<PyObject*>(ret);
 }
 
+static PyObject* graphset_rooted_trees(PyObject*, PyObject* args,
+                                       PyObject* kwds) {
+  static char s1[] = "graph";
+  static char s2[] = "is_spanning";
+  static char s3[] = "search_space";
+  static char* kwlist[] = {s1, s2, s3, NULL};
+  PyObject* graph_obj = NULL;
+  PyObject* search_space_obj = NULL;
+  int is_spanning = false;
+  if (!PyArg_ParseTupleAndKeywords(args, kwds, "Op|O", kwlist, &graph_obj,
+                                   &is_spanning, &search_space_obj))
+    return NULL;
+
+  std::vector<std::pair<std::string, std::string>> graph;
+  if (!input_graph(graph_obj, graph)) {
+    return NULL;
+  }
+
+  digraphillion::setset* search_space = NULL;
+  if (search_space_obj != NULL && search_space_obj != Py_None)
+    search_space = reinterpret_cast<PySetsetObject*>(search_space_obj)->ss;
+
+  digraphillion::setset ss =
+      digraphillion::SearchRootedTrees(graph, is_spanning, search_space);
+
+  PySetsetObject* ret = reinterpret_cast<PySetsetObject*>(
+      PySetset_Type.tp_alloc(&PySetset_Type, 0));
+  ret->ss = new digraphillion::setset(ss);
+  return reinterpret_cast<PyObject*>(ret);
+}
+
 static PyObject* graphset_show_messages(PySetsetObject* self, PyObject* obj) {
   int ret = digraphillion::ShowMessages(PyObject_IsTrue(obj));
   if (ret)
@@ -1348,6 +1379,8 @@ static PyMethodDef module_methods[] = {
      METH_VARARGS | METH_KEYWORDS, ""},
     {"_directed_forests",
      reinterpret_cast<PyCFunction>(graphset_directed_forests),
+     METH_VARARGS | METH_KEYWORDS, ""},
+    {"_rooted_trees", reinterpret_cast<PyCFunction>(graphset_rooted_trees),
      METH_VARARGS | METH_KEYWORDS, ""},
     {"_show_messages", reinterpret_cast<PyCFunction>(graphset_show_messages),
      METH_O, ""},

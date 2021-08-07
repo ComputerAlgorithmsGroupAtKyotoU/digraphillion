@@ -104,6 +104,13 @@ class TestDiGraphSet(unittest.TestCase):
         self.assertTrue([(1, 2), (2, 5), (5, 2), (2, 1)] not in gs)
         self.assertTrue([(1, 2), (2, 1)] not in gs)
 
+    def test_rooted_trees(self):
+        DiGraphSet.set_universe(universe_edges)
+        is_spanning = True
+        gs = DiGraphSet.rooted_trees(is_spanning)
+        for gg in gs:
+            print(gg)
+
 
 if __name__ == '__main__':
     unittest.main()

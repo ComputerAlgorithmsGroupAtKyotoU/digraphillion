@@ -4,6 +4,7 @@
 #include <climits>
 #include <vector>
 
+#include "FrontierData.hpp"
 #include "FrontierManager.hpp"
 #include "subsetting/DdSpec.hpp"
 #include "subsetting/util/Digraph.hpp"
@@ -15,7 +16,8 @@ typedef unsigned short ushort;
 typedef unsigned short FrontierTreeData;
 
 class FrontierRootedTreeSpec
-    : public tdzdd::PodArrayDdSpec<FrontierRootedTreeSpec, FrontierTreeData, 2> {
+    : public tdzdd::PodArrayDdSpec<FrontierRootedTreeSpec, DirectedFrontierData,
+                                   2> {
  private:
   // input graph
   const tdzdd::Digraph& graph_;
@@ -28,35 +30,44 @@ class FrontierRootedTreeSpec
 
   const FrontierManager fm_;
 
-  // This function gets whether the degree of v is at least 1 or not.
-  bool getDeg(FrontierTreeData* data, short v) const {
-    return ((data[fm_.vertexToPos(v)] >> 15) & 1u) != 0;
+  // This function gets deg of v.
+  short getIndeg(DirectedFrontierData* data, short v) const {
+    return data[fm_.vertexToPos(v)].indeg;
+  }
+
+  short getOutdeg(DirectedFrontierData* data, short v) const {
+    return data[fm_.vertexToPos(v)].outdeg;
   }
 
   // This function sets deg of v to be d.
-  void setDeg(FrontierTreeData* data, short v) const {
-    data[fm_.vertexToPos(v)] |= (1u << 15);
+  void setIndeg(DirectedFrontierData* data, short v, short d) const {
+    data[fm_.vertexToPos(v)].indeg = d;
   }
 
-  // This function sets deg of v to be d.
-  void resetDeg(FrontierTreeData* data, short v) const {
-    data[fm_.vertexToPos(v)] &= ~(1u << 15);
+  void setOutdeg(DirectedFrontierData* data, short v, short d) const {
+    data[fm_.vertexToPos(v)].outdeg = d;
+  }
+
+  void resetDeg(DirectedFrontierData* data, short v) const {
+    setIndeg(data, v, 0);
+    setOutdeg(data, v, 0);
   }
 
   // This function gets comp of v.
-  ushort getComp(FrontierTreeData* data, short v) const {
-    return data[fm_.vertexToPos(v)] & 0x7fffu;
+  ushort getComp(DirectedFrontierData* data, short v) const {
+    return data[fm_.vertexToPos(v)].comp;
   }
 
   // This function sets comp of v to be c.
-  void setComp(FrontierTreeData* data, short v, ushort c) const {
-    assert(c < 0x8000u);
-    data[fm_.vertexToPos(v)] = (0x8000u & data[fm_.vertexToPos(v)]) | c;
+  void setComp(DirectedFrontierData* data, short v, ushort c) const {
+    data[fm_.vertexToPos(v)].comp = c;
   }
 
-  void initializeData(FrontierTreeData* data) const {
+  void initializeData(DirectedFrontierData* data) const {
     for (int i = 0; i < fm_.getMaxFrontierSize(); ++i) {
-      data[i] = 0;
+      data[i].indeg = 0;
+      data[i].outdeg = 0;
+      data[i].comp = 0;
     }
   }
 
@@ -75,12 +86,12 @@ class FrontierRootedTreeSpec
     setArraySize(fm_.getMaxFrontierSize());
   }
 
-  int getRoot(FrontierTreeData* data) const {
+  int getRoot(DirectedFrontierData* data) const {
     initializeData(data);
     return m_;
   }
 
-  int getChild(FrontierTreeData* data, int level, int value) const {
+  int getChild(DirectedFrontierData* data, int level, int value) const {
     assert(1 <= level && level <= m_);
 
     // edge index (starting from 0)
@@ -94,6 +105,7 @@ class FrontierRootedTreeSpec
     for (size_t i = 0; i < entering_vs.size(); ++i) {
       int v = entering_vs[i];
       // initially the value of comp is the vertex number itself
+      resetDeg(data, v);
       setComp(data, v, static_cast<ushort>(v));
     }
 
@@ -109,8 +121,10 @@ class FrontierRootedTreeSpec
       }
 
       // increment deg of v1 and v2 (recall that edge = {v1, v2})
-      setDeg(data, edge.v1);
-      setDeg(data, edge.v2);
+      auto outdeg1 = getOutdeg(data, edge.v1);
+      auto indeg2 = getIndeg(data, edge.v2);
+      setIndeg(data, edge.v2, indeg2 + 1);
+      setOutdeg(data, edge.v1, outdeg1 + 1);
 
       if (c1 != c2) {  // connected components c1 and c2 become connected
         ushort cmin = std::min(c1, c2);
@@ -132,9 +146,15 @@ class FrontierRootedTreeSpec
       int v = leaving_vs[i];
 
       if (isSpanning_) {
-        if (!getDeg(data, v)) {  // the degree of v must be at least 1
+        if (getIndeg(data, v) + getOutdeg(data, v) ==
+            0) {  // the degree of v must be at least 1
           return 0;
         }
+      }
+
+      // the in-degree of v must be 0 or 1.
+      if (getIndeg(data, v) > 1) {
+        return 0;
       }
 
       // The degree of v must be 0 or 2.
@@ -170,7 +190,7 @@ class FrontierRootedTreeSpec
           comp_found = true;
         }
         // The degree of w is at least 1.
-        if (getDeg(data, w)) {
+        if (getIndeg(data, w) + getOutdeg(data, w)) {
           deg_found = true;
         }
         if (deg_found && comp_found) {
@@ -189,9 +209,10 @@ class FrontierRootedTreeSpec
         // That is, the generated subgraph is not connected.
         // Then, we return the 0-terminal.
         // assert(getDeg(data, v) == 0 || getDeg(data, v) == 2);
-        if (getDeg(data, v) && deg_found) {
-          return 0;                    // return the 0-terminal.
-        } else if (getDeg(data, v)) {  // If deg of v is 2,
+        if (getIndeg(data, v) + getOutdeg(data, v) > 0 && deg_found) {
+          return 0;  // return the 0-terminal.
+        } else if (getIndeg(data, v) +
+                   getOutdeg(data, v)) {  // If deg of v is 2,
           // and there is no vertex whose deg is at least 1
           // a single cycle is completed.
           // Then, we return the 1-terminal

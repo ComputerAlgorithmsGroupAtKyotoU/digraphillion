@@ -137,10 +137,9 @@ class DiGraphSet(object):
                     d[k] = [DiGraphSet._conv_edge(e) for e in l]
                 obj = d
             self._ss = setset(obj)
-        # ['graphs', 'connected_components', 'cliques', 'trees',
         methods = ['directed_cycles',
-                   'directed_hamiltonian_cycles', 'directed_st_path']
-        # 'forests', 'cycles', 'paths']
+                   'directed_hamiltonian_cycles', 'directed_st_path', 'directed_forests',
+                   ]
         for method in methods:
             setattr(self, method, partial(
                 getattr(DiGraphSet, method), DiGraphSet=self))
@@ -1697,6 +1696,20 @@ class DiGraphSet(object):
         ss = None if graphset is None else graphset._ss
 
         ss = _digraphillion._directed_forests(graph=graph, search_space=ss)
+        return DiGraphSet(ss)
+
+    @staticmethod
+    def rooted_trees(is_spanning=False, graphset=None):
+        graph = []
+        for e in setset.universe():
+            assert e[0] in DiGraphSet._vertices and e[1] in DiGraphSet._vertices
+            graph.append(
+                (pickle.dumps(e[0], protocol=0), pickle.dumps(e[1], protocol=0)))
+
+        ss = None if graphset is None else graphset._ss
+
+        ss = _digraphillion._rooted_trees(
+            graph=graph, is_spanning=is_spanning, search_space=ss)
         return DiGraphSet(ss)
 
     @staticmethod
