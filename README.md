@@ -1,14 +1,32 @@
 # DiGraphillion
 
-## how to build
+## Installing
 
-- `python3 setup.py build`
+### Requirements
 
-## how to test
+- Linux/Mac OS
+- 64-bit machines
+- Python version 3.6 or later
+- Python development environment (`Python.h`)
+  - It is included with XCode in macOS, while it can be installed by `apt install python-dev` in Ubuntu.
+- GCC or Clang
+  - To build Graphillion, you need gcc version 5.4.0 or later.
 
-- `python3 setup.py test`
+### Installing from source
 
-## methods
+GitHub repository
+
+1. Clone the Graphillion repository `git clone https://github.com/ComputerAlgorithmsGroupAtKyotoU/digraphillion.git`
+2. Change directory to "digraphillion"
+3. Run python `setup.py` build to build
+4. (optional) Run `python setup.py test -q` to execute the tests
+5. Run `sudo python setup.py install` to install
+
+## How to use graphsets
+
+- see [Graphillion](https://github.com/takemaru/graphillion#installing)
+
+## Methods for digraph
 
 | Method                                      | Description                                                                |
 | :------------------------------------------ | :------------------------------------------------------------------------- |
@@ -18,26 +36,9 @@
 | `gs.directed_forests()`                     | Returns a new DiGraphSet with directed forests (branching) from `gs`       |
 | `gs.rooted_trees(root, is_spanning`         | Returns a new DiGraphSet with rooted trees from `gs`                       |
 
-## Graphillion からの変更点 (for Developers)
-
-- `graphillion` から `digraphillion` に変更
-  - `GraphSet` は `DiGraphSet` へ
-- `digraphillion/graphset.py`
-  - `set_universe` で双方向の辺に対応
-  - `_traverse` で双方向の辺に対応
-- `src/subsetting/util/Digraph.hpp`
-  - 双方向辺に対応
-- python2, cygwin 等の動作に必要な部分は割愛
-
 ## References
 
 - [Graphillion](https://github.com/takemaru/graphillion)
 - [TdZdd](https://github.com/kunisura/TdZdd)
 - [py3c](https://github.com/encukou/py3c)
-
-## Todo
-
-- license 表記
-- test 追加 (tox に移行?)
-- path ? paths?
-- directed forest ? branching?
+- [開発者向けドキュメント](https://github.com/ComputerAlgorithmsGroupAtKyotoU/digraphillion/doc/developers_guide.md)
