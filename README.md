@@ -41,4 +41,4 @@ GitHub repository
 - [Graphillion](https://github.com/takemaru/graphillion)
 - [TdZdd](https://github.com/kunisura/TdZdd)
 - [py3c](https://github.com/encukou/py3c)
-- [開発者向けドキュメント](https://github.com/ComputerAlgorithmsGroupAtKyotoU/digraphillion/doc/developers_guide.md)
+- [開発者向けドキュメント](https://github.com/ComputerAlgorithmsGroupAtKyotoU/digraphillion/blob/main/doc/developers_guide.md)
