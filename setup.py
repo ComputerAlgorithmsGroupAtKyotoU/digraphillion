@@ -6,22 +6,18 @@ import sys
 sys.path.insert(0, 'digraphillion')
 import release
 
+root_dir = os.path.normpath(os.path.join(__file__, os.pardir))
 ext_module_sources = [
-    os.path.join('src', 'pydigraphillion.cc'),
-    os.path.join('src', 'digraphillion', 'graphset.cc'),
-    os.path.join('src', 'digraphillion', 'setset.cc'),
-    os.path.join('src', 'digraphillion', 'zdd.cc'),
-    os.path.join('src', 'SAPPOROBDD', 'bddc.c'),
-    os.path.join('src', 'SAPPOROBDD', 'BDD.cc'),
-    os.path.join('src', 'SAPPOROBDD', 'ZBDD.cc')
+    os.path.join(root_dir, 'src', 'pydigraphillion.cc'),
+    os.path.join(root_dir, 'src', 'digraphillion', 'graphset.cc'),
+    os.path.join(root_dir, 'src', 'digraphillion', 'setset.cc'),
+    os.path.join(root_dir, 'src', 'digraphillion', 'zdd.cc'),
+    os.path.join(root_dir, 'src', 'SAPPOROBDD', 'bddc.c'),
+    os.path.join(root_dir, 'src', 'SAPPOROBDD', 'BDD.cc'),
+    os.path.join(root_dir, 'src', 'SAPPOROBDD', 'ZBDD.cc')
 ]
 
 setup(
-    name='DiGraphillion',
-    version=release.version,
-    keywords=['graph', 'set', 'math', 'network'],
-    license=release.license,
-    packages=['digraphillion'],
     ext_modules=[Extension(
         '_digraphillion',
         sources=ext_module_sources,
