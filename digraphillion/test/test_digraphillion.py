@@ -27,7 +27,7 @@ universe_edges = [e1, e2, e3, e4, e5, e6, e7, e8, e9,
                   e10, e11, e12, e13, e14]
 
 
-class TestDiGraphSet(unittest.TestCase):
+class TestDigraphillion(unittest.TestCase):
     def test_init(self):
         gs = DiGraphSet()
         self.assertEqual(len(gs), 0)

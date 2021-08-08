@@ -1759,7 +1759,8 @@ class DiGraphSet(object):
                         degree[u] -= 1
                         e = (u, v) if (u, v) in indexed_edges else (v, u)
                         sorted_edges.append(e)
-                        sorted_edges.append((e[1], e[0]))
+                        if (e[1], e[0]) in indexed_edges:
+                            sorted_edges.append((e[1], e[0]))
                         if degree[v]:
                             for w in sorted(neighbors[v]):
                                 if w not in visited_vertices:
