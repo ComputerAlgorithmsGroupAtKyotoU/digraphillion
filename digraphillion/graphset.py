@@ -58,16 +58,19 @@ class DiGraphSet(object):
       We assume the following graph and register the edge list as the
       universe.
 
-      1 --- 2 --- 3
+      1 <-> 2 <-> 3
+      ^     ^     ^
       |     |     |
-      4 --- 5 --- 6
+      v     v     v
+      4 <-> 5 <-> 6
 
-      >>> universe = [(1, 2), (1, 4), (2, 3), (2, 5), (3, 6), (4, 5), (5, 6)]
+      >>> universe = [(1, 2), (1, 4), (2, 3), (2, 5), (3, 6), (4, 5), (5, 6),
+                      (2, 1), (4, 1), (3, 2), (5, 2), (6, 3), (5, 4), (6, 5)]
       >>> DiGraphSet.set_universe(universe)
 
       Find all paths from 1 to 6 and count them.
 
-      >>> paths = DiGraphSet.paths(1, 6)
+      >>> paths = DiGraphSet.directed_paths(1, 6)
       >>> len(paths)
       4
 
