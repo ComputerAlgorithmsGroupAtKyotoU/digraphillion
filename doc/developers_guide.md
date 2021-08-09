@@ -36,5 +36,4 @@ see also [Graphillion Developers Guide](https://hackmd.io/@yamazaki2021/BJbLdp5a
 
 - license 表記
 - test 追加 (tox に移行?)
-- path ? paths?
 - directed forest ? branching?
