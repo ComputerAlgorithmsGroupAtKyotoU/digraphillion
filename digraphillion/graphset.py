@@ -58,16 +58,19 @@ class DiGraphSet(object):
       We assume the following graph and register the edge list as the
       universe.
 
-      1 --- 2 --- 3
+      1 <-> 2 <-> 3
+      ^     ^     ^
       |     |     |
-      4 --- 5 --- 6
+      v     v     v
+      4 <-> 5 <-> 6
 
-      >>> universe = [(1, 2), (1, 4), (2, 3), (2, 5), (3, 6), (4, 5), (5, 6)]
+      >>> universe = [(1, 2), (1, 4), (2, 3), (2, 5), (3, 6), (4, 5), (5, 6),
+                      (2, 1), (4, 1), (3, 2), (5, 2), (6, 3), (5, 4), (6, 5)]
       >>> DiGraphSet.set_universe(universe)
 
       Find all paths from 1 to 6 and count them.
 
-      >>> paths = DiGraphSet.paths(1, 6)
+      >>> paths = DiGraphSet.directed_paths(1, 6)
       >>> len(paths)
       4
 
@@ -138,8 +141,8 @@ class DiGraphSet(object):
                 obj = d
             self._ss = setset(obj)
         methods = ['directed_cycles',
-                   'directed_hamiltonian_cycles', 'directed_st_path', 'directed_forests',
-                   ]
+                   'directed_hamiltonian_cycles', 'directed_st_paths', 'directed_forests',
+                   'rooted_trees', ]
         for method in methods:
             setattr(self, method, partial(
                 getattr(DiGraphSet, method), DiGraphSet=self))
@@ -1643,6 +1646,19 @@ class DiGraphSet(object):
 
     @staticmethod
     def directed_cycles(graphset=None):
+        """Returns a DiGraphSet with directed single cycles.
+
+        Examples:
+          >>> DiGraphSet.directed_cycles()
+          DiGraphSet([[(1, 4), (4, 1)], [(4, 5), (5, 4)], [(1, 2), (2, 1)], [(2, 5), ( ...
+
+          Args:
+            graphset: Optional.  A DiGraphSet object.  Components to be
+              stored are selected from this object.
+
+          Returns:
+            A new DiGraphSet object.
+        """
         graph = []
         for e in setset.universe():
             assert e[0] in DiGraphSet._vertices and e[1] in DiGraphSet._vertices
@@ -1656,6 +1672,19 @@ class DiGraphSet(object):
 
     @staticmethod
     def directed_hamiltonian_cycles(graphset=None):
+        """Returns a DiGraphSet with directed single hamiltonian cycles.
+
+        Examples:
+          >>> DiGraphSet.directed_hamiltonian_cycles()
+          DiGraphSet([[(1, 4), (2, 1), (3, 2), (4, 5), (5, 6), (6, 3)], [(1, 2), (2, 3 ...
+
+          Args:
+            graphset: Optional.  A DiGraphSet object.  Components to be
+              stored are selected from this object.
+
+          Returns:
+            A new DiGraphSet object.
+        """
         graph = []
         for e in setset.universe():
             assert e[0] in DiGraphSet._vertices and e[1] in DiGraphSet._vertices
@@ -1669,7 +1698,30 @@ class DiGraphSet(object):
         return DiGraphSet(ss)
 
     @staticmethod
-    def directed_st_path(s, t, is_hamiltonian=False, graphset=None):
+    def directed_st_paths(s, t, is_hamiltonian=False, graphset=None):
+        """Returns a DiGraphSet with directed directed st paths.
+
+        Examples:
+          >>> DiGraphSet.directed_st_paths(1, 6, False)
+          DiGraphSet([[(1, 4), (4, 5), (5, 6)], [(1, 2), (2, 5), (5, 6)], [(1, 2), (2, ...
+
+          >>> DiGraphSet.directed_st_paths(1, 6, True)
+          DiGraphSet([[(1, 4), (2, 3), (3, 6), (4, 5), (5, 2)]])
+
+          Args:
+            s: A vertex. The start point of paths.
+
+            t: A vertex. The endpoint of paths.
+
+            is_hamiltonian: Optional. True or False. If true, paths
+              must be hamiltonian.
+
+            graphset: Optional.  A DiGraphSet object.  Components to be
+              stored are selected from this object.
+
+          Returns:
+            A new DiGraphSet object.
+        """
         graph = []
         for e in setset.universe():
             assert e[0] in DiGraphSet._vertices and e[1] in DiGraphSet._vertices
@@ -1687,6 +1739,20 @@ class DiGraphSet(object):
 
     @staticmethod
     def directed_forests(graphset=None):
+        """Returns a DiGraphSet with directed forests.
+        'directed forest' is also called 'brancing'.
+
+        Examples:
+          >>> DiGraphSet.directed_forests()
+          DiGraphSet([[], [(4, 1)], [(1, 4)], [(5, 4)], [(4, 5)], [(2, 1)], [(1, 2)],  ...
+
+          Args:
+            graphset: Optional.  A DiGraphSet object.  Components to be
+              stored are selected from this object.
+
+          Returns:
+            A new DiGraphSet object.
+        """
         graph = []
         for e in setset.universe():
             assert e[0] in DiGraphSet._vertices and e[1] in DiGraphSet._vertices
@@ -1700,6 +1766,27 @@ class DiGraphSet(object):
 
     @staticmethod
     def rooted_trees(root, is_spanning=False, graphset=None):
+        """Returns a DiGraphSet with directed rooted trees.
+
+        Examples:
+          >>> DiGraphSet.rooted_trees(1, False)
+          DiGraphSet([[(1, 4)], [(1, 2)], [(1, 4), (4, 5)], [(1, 2), (1, 4)], [(1, 2), ...
+
+          >>> DiGraphSet.rooted_trees(1, True)
+          DiGraphSet([[(1, 2), (1, 4), (2, 3), (3, 6), (4, 5)], [(1, 2), (1, 4), (2, 3 ...
+
+          Args:
+            root: A vertex, at which trees are rooted.
+
+            is_spanning: Optional. True or False. If true, trees must
+              be composed of all vertices.
+
+            graphset: Optional.  A DiGraphSet object.  Components to be
+              stored are selected from this object.
+
+          Returns:
+            A new DiGraphSet object.
+        """
         graph = []
         for e in setset.universe():
             assert e[0] in DiGraphSet._vertices and e[1] in DiGraphSet._vertices
