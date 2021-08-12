@@ -24,7 +24,7 @@ setup(
         include_dirs=['src', 'src/SAPPOROBDD'],
         libraries=[],
         define_macros=[('B_64', None)],
-        extra_compile_args=['-O3', '-march=native'],
+        extra_compile_args=['-march=native'],
         extra_link_args=[],
     ), ],
     test_suite='digraphillion.test'

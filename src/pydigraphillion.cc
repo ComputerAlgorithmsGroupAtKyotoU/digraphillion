@@ -136,10 +136,10 @@ static int setset_parse_set(PyObject* so, std::set<int>* s) {
 }
 
 static std::vector<int> intersection(
-    const std::map<std::string, std::vector<int>>& m, const std::string& key1,
+    const std::map<std::string, std::vector<int> >& m, const std::string& key1,
     const std::string& key2) {
-  std::map<std::string, std::vector<int>>::const_iterator in_i = m.find(key1);
-  std::map<std::string, std::vector<int>>::const_iterator ex_i = m.find(key2);
+  std::map<std::string, std::vector<int> >::const_iterator in_i = m.find(key1);
+  std::map<std::string, std::vector<int> >::const_iterator ex_i = m.find(key2);
   std::vector<int> in_v = in_i != m.end() ? in_i->second : std::vector<int>();
   std::vector<int> ex_v = ex_i != m.end() ? ex_i->second : std::vector<int>();
   std::sort(in_v.begin(), in_v.end());
@@ -152,7 +152,7 @@ static std::vector<int> intersection(
 }
 
 static int setset_parse_map(PyObject* dict_obj,
-                            std::map<std::string, std::vector<int>>* m) {
+                            std::map<std::string, std::vector<int> >* m) {
   assert(m != NULL);
   PyObject* key_obj;
   PyObject* lo;
@@ -294,7 +294,7 @@ static int setset_init(PySetsetObject* self, PyObject* args, PyObject* kwds) {
   } else if (PyList_Check(obj)) {
     PyObject* i = PyObject_GetIter(obj);
     if (i == NULL) return -1;
-    std::vector<std::set<int>> vs;
+    std::vector<std::set<int> > vs;
     PyObject* o;
     while ((o = PyIter_Next(i))) {
       if (!PyAnySet_Check(o)) {
@@ -309,7 +309,7 @@ static int setset_init(PySetsetObject* self, PyObject* args, PyObject* kwds) {
     Py_DECREF(i);
     self->ss = new digraphillion::setset(vs);
   } else if (PyDict_Check(obj)) {
-    std::map<std::string, std::vector<int>> m;
+    std::map<std::string, std::vector<int> > m;
     if (setset_parse_map(obj, &m) == -1) return -1;
     self->ss = new digraphillion::setset(m);
   } else {
@@ -1148,7 +1148,7 @@ static PyObject* setset_num_elems(PyObject*, PyObject* args) {
 }
 
 bool input_graph(PyObject* graph_obj,
-                 std::vector<std::pair<std::string, std::string>>& graph) {
+                 std::vector<std::pair<std::string, std::string> >& graph) {
   if (graph_obj == NULL || graph_obj == Py_None) {
     PyErr_SetString(PyExc_TypeError, "no graph");
     return false;
@@ -1190,7 +1190,7 @@ static PyObject* graphset_directed_cycles(PyObject*, PyObject* args,
                                    &search_space_obj))
     return NULL;
 
-  std::vector<std::pair<std::string, std::string>> graph;
+  std::vector<std::pair<std::string, std::string> > graph;
   if (!input_graph(graph_obj, graph)) {
     return NULL;
   }
@@ -1219,7 +1219,7 @@ static PyObject* graphset_directed_hamiltonian_cycles(PyObject*, PyObject* args,
                                    &search_space_obj))
     return NULL;
 
-  std::vector<std::pair<std::string, std::string>> graph;
+  std::vector<std::pair<std::string, std::string> > graph;
   if (!input_graph(graph_obj, graph)) {
     return NULL;
   }
@@ -1255,7 +1255,7 @@ static PyObject* graphset_directed_st_path(PyObject*, PyObject* args,
                                    &search_space_obj))
     return NULL;
 
-  std::vector<std::pair<std::string, std::string>> graph;
+  std::vector<std::pair<std::string, std::string> > graph;
   if (!input_graph(graph_obj, graph)) {
     return NULL;
   }
@@ -1305,7 +1305,7 @@ static PyObject* graphset_directed_forests(PyObject*, PyObject* args,
                                    &search_space_obj))
     return NULL;
 
-  std::vector<std::pair<std::string, std::string>> graph;
+  std::vector<std::pair<std::string, std::string> > graph;
   if (!input_graph(graph_obj, graph)) {
     return NULL;
   }
@@ -1338,7 +1338,7 @@ static PyObject* graphset_rooted_trees(PyObject*, PyObject* args,
                                    &root_obj, &is_spanning, &search_space_obj))
     return NULL;
 
-  std::vector<std::pair<std::string, std::string>> graph;
+  std::vector<std::pair<std::string, std::string> > graph;
   if (!input_graph(graph_obj, graph)) {
     return NULL;
   }
