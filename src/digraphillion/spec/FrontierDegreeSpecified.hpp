@@ -8,7 +8,7 @@
 #include "FrontierManager.hpp"
 #include "subsetting/DdSpec.hpp"
 #include "subsetting/util/Digraph.hpp"
-#include "subsetting/util/IntSubset.hpp"
+#include "subsetting/util/IntRange.hpp"
 
 using namespace tdzdd;
 
@@ -25,8 +25,8 @@ class FrontierDegreeSpecifiedSpec
 
   const FrontierManager fm_;
 
-  std::vector<IntSubset const*> in_constraints;
-  std::vector<IntSubset const*> out_constraints;
+  std::vector<tdzdd::Range> in_constraints;
+  std::vector<tdzdd::Range> out_constraints;
 
   // This function gets deg of v.
   short getIndeg(DirectedFrontierData* data, short v) const {
@@ -55,8 +55,7 @@ class FrontierDegreeSpecifiedSpec
   }
 
  public:
-  FrontierDegreeSpecifiedSpec(const tdzdd::Digraph& graph,
-                              IntSubset const* c = 0)
+  FrontierDegreeSpecifiedSpec(const tdzdd::Digraph& graph)
       : graph_(graph),
         n_(static_cast<short>(graph_.vertexSize())),
         m_(graph_.edgeSize()),
@@ -74,21 +73,21 @@ class FrontierDegreeSpecifiedSpec
     in_constraints.resize(m + 1);
     out_constraints.resize(m + 1);
     for (int v = 1; v <= m; v++) {
-      in_constraints[v] = c;
-      out_constraints[v] = c;
+      in_constraints.at(v) = tdzdd::Range(0, INT_MAX);
+      out_constraints.at(v) = tdzdd::Range(0, INT_MAX);
     }
   }
 
-  void setIndegConstraint(Digraph::VertexNumber v, IntSubset const* c) {
+  void setIndegConstraint(Digraph::VertexNumber v, const tdzdd::Range& c) {
     if (v < 1 || graph_.vertexSize() < v)
       throw std::runtime_error("ERROR: Vertex number is out of range");
-    in_constraints[v] = c;
+    in_constraints.at(v) = c;
   }
 
-  void setOutdegConstraint(Digraph::VertexNumber v, IntSubset const* c) {
+  void setOutdegConstraint(Digraph::VertexNumber v, const tdzdd::Range& c) {
     if (v < 1 || graph_.vertexSize() < v)
       throw std::runtime_error("ERROR: Vertex number is out of range");
-    out_constraints[v] = c;
+    out_constraints.at(v) = c;
   }
 
   int getRoot(DirectedFrontierData* data) const {
@@ -108,7 +107,7 @@ class FrontierDegreeSpecifiedSpec
     // initialize deg of the vertices newly entering the frontier
     const std::vector<int>& entering_vs = fm_.getEnteringVs(edge_index);
     for (size_t i = 0; i < entering_vs.size(); ++i) {
-      int v = entering_vs[i];
+      int v = entering_vs.at(i);
       // initially the value of deg is 0
       setIndeg(data, v, 0);
       setOutdeg(data, v, 0);
@@ -118,13 +117,13 @@ class FrontierDegreeSpecifiedSpec
       // increment deg of v1 and v2 (recall that edge = {v1, v2})
       auto outdeg1 = getOutdeg(data, edge.v1);
       assert(1 <= edge.v1 && edge.v1 < (int)out_constraints.size());
-      if (!out_constraints[edge.v1]->contains(outdeg1 + 1)) {
+      if (!out_constraints.at(edge.v1).contains(outdeg1 + 1)) {
         return 0;
       }
 
       auto indeg2 = getIndeg(data, edge.v2);
       assert(1 <= edge.v2 && edge.v2 < (int)in_constraints.size());
-      if (!in_constraints[edge.v2]->contains(indeg2 + 1)) {
+      if (!in_constraints.at(edge.v2).contains(indeg2 + 1)) {
         return 0;
       }
       setIndeg(data, edge.v2, indeg2 + 1);
@@ -134,24 +133,23 @@ class FrontierDegreeSpecifiedSpec
     // vertices that are leaving the frontier
     const std::vector<int>& leaving_vs = fm_.getLeavingVs(edge_index);
     for (size_t i = 0; i < leaving_vs.size(); ++i) {
-      int v = leaving_vs[i];
+      int v = leaving_vs.at(i);
 
       int indeg = getIndeg(data, v), outdeg = getOutdeg(data, v);
       assert(1 <= v && v < (int)in_constraints.size());
       assert(1 <= v && v < (int)out_constraints.size());
-      if (!in_constraints[v]->contains(indeg) ||
-          !out_constraints[v]->contains(outdeg)) {
+      if (!in_constraints.at(v).contains(indeg) ||
+          !out_constraints.at(v).contains(outdeg)) {
         return 0;
       }
 
       // Since deg of v is never used until the end,
       // we erase the values.
-      setIndeg(data, v, -1);
-      setOutdeg(data, v, -1);
+      setIndeg(data, v, 0);
+      setOutdeg(data, v, 0);
     }
     if (level == 1) {
-      // If we come here, the edge set is empty (taking no edge).
-      return 0;
+      return -1;
     }
     assert(level - 1 > 0);
     return level - 1;

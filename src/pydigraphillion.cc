@@ -13,6 +13,7 @@
 #include "digraphillion/graphset.h"
 #include "py3c.h"
 #include "py3c/tpflags.h"
+#include "subsetting/util/IntRange.hpp"
 
 #define PyString_AsString PyUnicode_AsUTF8
 
@@ -1204,7 +1205,7 @@ bool input_string_list(PyObject* list_obj, std::vector<std::string>& list) {
 }
 
 bool input_vertex_to_range_map(
-    PyObject* map_obj, std::map<std::string, digraphillion::Range>& mp) {
+    PyObject* map_obj, std::map<std::string, tdzdd::Range>& mp) {
   PyObject* vo;
   PyObject* lo;
   Py_ssize_t pos = 0;
@@ -1226,7 +1227,7 @@ bool input_vertex_to_range_map(
       }
       r.push_back(PyInt_AsLong(io));
     }
-    mp[vertex] = digraphillion::Range(r[0], r[1], r[2]);
+    mp[vertex] = tdzdd::Range(r[0], r[1], r[2]);
   }
   return true;
 }
@@ -1451,8 +1452,8 @@ static PyObject* graphset_directed_graphs(PyObject*, PyObject* args,
     return NULL;
   }
 
-  std::map<std::string, digraphillion::Range> in_degree_constraints_entity;
-  std::map<std::string, digraphillion::Range>* in_degree_constraints = NULL;
+  std::map<std::string, tdzdd::Range> in_degree_constraints_entity;
+  std::map<std::string, tdzdd::Range>* in_degree_constraints = NULL;
   if (in_degree_constraints_obj != NULL &&
       in_degree_constraints_obj != Py_None) {
     in_degree_constraints = &in_degree_constraints_entity;
@@ -1462,8 +1463,8 @@ static PyObject* graphset_directed_graphs(PyObject*, PyObject* args,
     }
   }
 
-  std::map<std::string, digraphillion::Range> out_degree_constrains_entity;
-  std::map<std::string, digraphillion::Range>* out_degree_constrains = NULL;
+  std::map<std::string, tdzdd::Range> out_degree_constrains_entity;
+  std::map<std::string, tdzdd::Range>* out_degree_constrains = NULL;
   if (out_degree_constraints_obj != NULL &&
       out_degree_constraints_obj != Py_None) {
     out_degree_constrains = &out_degree_constrains_entity;
