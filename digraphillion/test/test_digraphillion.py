@@ -104,10 +104,25 @@ class TestDigraphillion(unittest.TestCase):
         self.assertTrue([(1, 2), (2, 5), (5, 2), (2, 1)] not in gs)
         self.assertTrue([(1, 2), (2, 1)] not in gs)
 
-        roots = [1]
+        roots = [1, 2, 3]
         gs = DiGraphSet.rooted_forests(roots)
-        for gg in gs:
-            print(gg)
+        self.assertEqual(len(gs), 1)
+        self.assertTrue([(1, 4), (2, 5), (3, 6)] in gs)
+
+        roots = [1, 4]
+        gs = DiGraphSet.rooted_forests(roots)
+        self.assertEqual(len(gs), 6)
+        self.assertTrue([(1, 2), (4, 5)] in gs)
+        self.assertTrue([(1, 2), (2, 3), (3, 6), (4, 5)] in gs)
+        self.assertTrue([(1, 2), (5, 4)] not in gs)
+        self.assertTrue([(1, 2), (2, 5)] not in gs)
+
+        roots = [2]
+        gs = DiGraphSet.rooted_forests(roots)
+        self.assertTrue([(2, 1), (1, 4), (4, 5), (5, 6), (6, 3)] in gs)
+        self.assertTrue([(2, 1), (2, 3), (2, 5)] in gs)
+        self.assertTrue([(3, 6), (6, 5), (5, 4)] not in gs)
+        self.assertTrue([(1, 2)] not in gs)
 
     def test_rooted_spanning_trees(self):
         DiGraphSet.set_universe(universe_edges)

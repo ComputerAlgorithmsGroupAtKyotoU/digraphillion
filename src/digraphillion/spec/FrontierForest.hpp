@@ -2,8 +2,8 @@
 #define FRONTIER_FOREST_HPP
 
 #include <climits>
-#include <vector>
 #include <set>
+#include <vector>
 
 #include "FrontierData.hpp"
 #include "FrontierManager.hpp"
@@ -66,7 +66,9 @@ class FrontierDirectedForestSpec
   }
 
  public:
-  FrontierDirectedForestSpec(const tdzdd::Digraph& graph, const std::set<tdzdd::Digraph::VertexNumber>& _roots)
+  FrontierDirectedForestSpec(
+      const tdzdd::Digraph& graph,
+      const std::set<tdzdd::Digraph::VertexNumber>& _roots)
       : graph_(graph),
         roots(_roots),
         n_(static_cast<short>(graph_.vertexSize())),
@@ -142,9 +144,32 @@ class FrontierDirectedForestSpec
     for (size_t i = 0; i < leaving_vs.size(); ++i) {
       int v = leaving_vs[i];
 
-      // the in-degree of v must be 0 or 1.
-      if (getIndeg(data, v) > 1) {
-        return 0;
+      if (roots.size()) {
+        // roots are specified.
+        if (roots.count(v)) {
+          // the in-degree of a root vertex must be 0.
+          if (getIndeg(data, v) > 0) {
+            return 0;
+          }
+          // the out-degree of a root vertex must be positive.
+          if (getOutdeg(data, v) == 0) {
+            return 0;
+          }
+        } else {
+          // the in-degree of a non-root vertex must be 1 or the vertex is
+          // isolated.
+          bool ok = (getIndeg(data, v) == 1) ||
+                    (getIndeg(data, v) == 0 && getOutdeg(data, v) == 0);
+          if (!ok) {
+            return 0;
+          }
+        }
+      } else {
+        // root are not specified.
+        // the in-degree of a vertex must be 0 or 1.
+        if (getIndeg(data, v) > 1) {
+          return 0;
+        }
       }
 
       // Since deg and comp of v are never used until the end,
