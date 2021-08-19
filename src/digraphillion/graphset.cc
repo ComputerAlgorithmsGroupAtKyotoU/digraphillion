@@ -5,7 +5,7 @@
 #include "spec/FrontierDirectedHamiltonianCycle.hpp"
 #include "spec/FrontierDirectedSTPath.hpp"
 #include "spec/FrontierDirectedSingleCycle.hpp"
-#include "spec/FrontierForest.hpp"
+#include "spec/FrontierRootedForest.hpp"
 #include "spec/FrontierRootedTree.hpp"
 #include "subsetting/DdStructure.hpp"
 #include "subsetting/eval/ToZBDD.hpp"
@@ -147,7 +147,7 @@ setset SearchDirectedForests(const std::vector<edge_t>& digraph,
     dd = DdStructure<2>(g.edgeSize());
   }
 
-  FrontierDirectedForestSpec spec(g, roots_set);
+  FrontierRootedForestSpec spec(g, roots_set);
   dd.zddSubset(spec);
   dd.zddReduce();
 

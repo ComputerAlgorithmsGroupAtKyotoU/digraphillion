@@ -14,8 +14,8 @@ using namespace tdzdd;
 
 typedef unsigned short ushort;
 
-class FrontierDirectedForestSpec
-    : public tdzdd::PodArrayDdSpec<FrontierDirectedForestSpec,
+class FrontierRootedForestSpec
+    : public tdzdd::PodArrayDdSpec<FrontierRootedForestSpec,
                                    DirectedFrontierData, 2> {
  private:
   // input graph
@@ -66,7 +66,7 @@ class FrontierDirectedForestSpec
   }
 
  public:
-  FrontierDirectedForestSpec(
+  FrontierRootedForestSpec(
       const tdzdd::Digraph& graph,
       const std::set<tdzdd::Digraph::VertexNumber>& _roots)
       : graph_(graph),
