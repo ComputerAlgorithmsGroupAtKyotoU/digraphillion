@@ -1738,7 +1738,7 @@ class DiGraphSet(object):
         return DiGraphSet(ss)
 
     @staticmethod
-    def rooted_forests(roots=None, graphset=None):
+    def rooted_forests(roots=None, is_spanning=False, graphset=None):
         """Returns a DiGraphSet with directed forests.
         'directed forest' is also called 'brancing'.
 
@@ -1748,6 +1748,9 @@ class DiGraphSet(object):
 
           Args:
             roots: Optional. A list of vertices.
+
+            is_spanning: Optional. True or False. If true, trees must
+              be composed of all vertices.
 
             graphset: Optional.  A DiGraphSet object.  Components to be
               stored are selected from this object.
@@ -1763,13 +1766,14 @@ class DiGraphSet(object):
 
         rs = []
         if roots is not None:
-          for root in roots:
-            assert root in DiGraphSet._vertices
-            rs.append(pickle.dumps(root, protocol=0))
+            for root in roots:
+                assert root in DiGraphSet._vertices
+                rs.append(pickle.dumps(root, protocol=0))
 
         ss = None if graphset is None else graphset._ss
 
-        ss = _digraphillion._rooted_forests(graph=graph, roots=rs, search_space=ss)
+        ss = _digraphillion._rooted_forests(
+            graph=graph, roots=rs, is_spanning=is_spanning, search_space=ss)
         return DiGraphSet(ss)
 
     @staticmethod

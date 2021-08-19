@@ -1322,13 +1322,15 @@ static PyObject* graphset_rooted_forests(PyObject*, PyObject* args,
                                          PyObject* kwds) {
   static char s1[] = "graph";
   static char s2[] = "roots";
-  static char s3[] = "search_space";
-  static char* kwlist[4] = {s1, s2, s3, NULL};
+  static char s3[] = "is_spanning";
+  static char s4[] = "search_space";
+  static char* kwlist[] = {s1, s2, s3, s4, NULL};
   PyObject* graph_obj = NULL;
   PyObject* roots_obj = NULL;
   PyObject* search_space_obj = NULL;
-  if (!PyArg_ParseTupleAndKeywords(args, kwds, "O|OO", kwlist, &graph_obj,
-                                   &roots_obj, &search_space_obj))
+  int is_spanning;
+  if (!PyArg_ParseTupleAndKeywords(args, kwds, "O|OpO", kwlist, &graph_obj,
+                                   &roots_obj, &is_spanning, &search_space_obj))
     return NULL;
 
   std::vector<std::pair<std::string, std::string> > graph;
@@ -1348,7 +1350,7 @@ static PyObject* graphset_rooted_forests(PyObject*, PyObject* args,
     search_space = reinterpret_cast<PySetsetObject*>(search_space_obj)->ss;
 
   digraphillion::setset ss =
-      digraphillion::SearchDirectedForests(graph, roots, search_space);
+      digraphillion::SearchDirectedForests(graph, roots, is_spanning, search_space);
 
   PySetsetObject* ret = reinterpret_cast<PySetsetObject*>(
       PySetset_Type.tp_alloc(&PySetset_Type, 0));

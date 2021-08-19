@@ -181,6 +181,7 @@ class setset {
                                      vertex_t t, const setset* search_space);
   friend setset SearchDirectedForests(const std::vector<edge_t>& digraph,
                                       const std::vector<vertex_t>& roots,
+                                      bool is_spanning,
                                       const setset* search_space);
   friend setset SearchRootedTrees(const std::vector<edge_t>& digraph,
                                   vertex_t root, bool is_spanning,

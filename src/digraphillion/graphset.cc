@@ -124,7 +124,7 @@ setset SearchDirectedSTPath(const std::vector<edge_t>& digraph,
 
 setset SearchDirectedForests(const std::vector<edge_t>& digraph,
                              const std::vector<vertex_t>& roots,
-                             const setset* search_space) {
+                             bool is_spanning, const setset* search_space) {
   assert(static_cast<size_t>(setset::num_elems()) == digraph.size());
 
   Digraph g;
@@ -147,7 +147,7 @@ setset SearchDirectedForests(const std::vector<edge_t>& digraph,
     dd = DdStructure<2>(g.edgeSize());
   }
 
-  FrontierRootedForestSpec spec(g, roots_set);
+  FrontierRootedForestSpec spec(g, roots_set, is_spanning);
   dd.zddSubset(spec);
   dd.zddReduce();
 

@@ -22,6 +22,8 @@ class FrontierRootedForestSpec
   const tdzdd::Digraph& graph_;
   // root verteces
   const std::set<tdzdd::Digraph::VertexNumber> roots;
+  // spanning forest or not
+  bool is_spanning;
   // number of vertices
   const short n_;
   // number of edges
@@ -66,11 +68,12 @@ class FrontierRootedForestSpec
   }
 
  public:
-  FrontierRootedForestSpec(
-      const tdzdd::Digraph& graph,
-      const std::set<tdzdd::Digraph::VertexNumber>& _roots)
+  FrontierRootedForestSpec(const tdzdd::Digraph& graph,
+                           const std::set<tdzdd::Digraph::VertexNumber>& _roots,
+                           bool _is_spanning)
       : graph_(graph),
         roots(_roots),
+        is_spanning(_is_spanning),
         n_(static_cast<short>(graph_.vertexSize())),
         m_(graph_.edgeSize()),
         fm_(graph_) {
@@ -143,6 +146,14 @@ class FrontierRootedForestSpec
     const std::vector<int>& leaving_vs = fm_.getLeavingVs(edge_index);
     for (size_t i = 0; i < leaving_vs.size(); ++i) {
       int v = leaving_vs[i];
+
+      // vertex in a spanning forest must not be isolated
+      if (is_spanning) {
+        if (getIndeg(data, v) == 0 &&
+            getOutdeg(data, v) == 0) {  // the degree of v must be at least 1
+          return 0;
+        }
+      }
 
       if (roots.size()) {
         // roots are specified.
