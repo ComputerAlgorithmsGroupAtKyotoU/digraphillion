@@ -1851,9 +1851,9 @@ class DiGraphSet(object):
                         r[0], r[-1] + 1, r[1] - r[0])
 
         out_dc = None
-        if in_degree_constraints is not None:
+        if out_degree_constraints is not None:
             out_dc = {}
-            for v, r in viewitems(in_degree_constraints):
+            for v, r in viewitems(out_degree_constraints):
                 if v not in DiGraphSet._vertices:
                     raise KeyError(v)
                 if isinstance(r, int):
