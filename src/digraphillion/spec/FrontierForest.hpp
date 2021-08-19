@@ -3,6 +3,7 @@
 
 #include <climits>
 #include <vector>
+#include <set>
 
 #include "FrontierData.hpp"
 #include "FrontierManager.hpp"
@@ -19,6 +20,8 @@ class FrontierDirectedForestSpec
  private:
   // input graph
   const tdzdd::Digraph& graph_;
+  // root verteces
+  const std::set<tdzdd::Digraph::VertexNumber> roots;
   // number of vertices
   const short n_;
   // number of edges
@@ -63,8 +66,9 @@ class FrontierDirectedForestSpec
   }
 
  public:
-  FrontierDirectedForestSpec(const tdzdd::Digraph& graph)
+  FrontierDirectedForestSpec(const tdzdd::Digraph& graph, const std::set<tdzdd::Digraph::VertexNumber>& _roots)
       : graph_(graph),
+        roots(_roots),
         n_(static_cast<short>(graph_.vertexSize())),
         m_(graph_.edgeSize()),
         fm_(graph_) {

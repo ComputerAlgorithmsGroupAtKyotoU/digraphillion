@@ -88,9 +88,9 @@ class TestDigraphillion(unittest.TestCase):
                 hamiltonian = DiGraphSet.directed_st_paths(s, t, True)
                 self.assertTrue(hamiltonian.issubset(path))
 
-    def test_directed_forests(self):
+    def test_rooted_forests(self):
         DiGraphSet.set_universe(universe_edges)
-        gs = DiGraphSet.directed_forests()
+        gs = DiGraphSet.rooted_forests()
 
         self.assertTrue([(1, 2), (2, 3), (3, 6), (6, 5), (5, 4)] in gs)
         self.assertTrue([(5, 4), (4, 1), (5, 6), (6, 3)] in gs)
@@ -103,6 +103,11 @@ class TestDigraphillion(unittest.TestCase):
         self.assertTrue([(2, 1), (4, 1)] not in gs)
         self.assertTrue([(1, 2), (2, 5), (5, 2), (2, 1)] not in gs)
         self.assertTrue([(1, 2), (2, 1)] not in gs)
+
+        roots = [1]
+        gs = DiGraphSet.rooted_forests(roots)
+        for gg in gs:
+            print(gg)
 
     def test_rooted_spanning_trees(self):
         DiGraphSet.set_universe(universe_edges)

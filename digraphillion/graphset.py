@@ -141,7 +141,7 @@ class DiGraphSet(object):
                 obj = d
             self._ss = setset(obj)
         methods = ['directed_cycles',
-                   'directed_hamiltonian_cycles', 'directed_st_paths', 'directed_forests',
+                   'directed_hamiltonian_cycles', 'directed_st_paths', 'rooted_forests',
                    'rooted_trees', ]
         for method in methods:
             setattr(self, method, partial(
@@ -1738,7 +1738,7 @@ class DiGraphSet(object):
         return DiGraphSet(ss)
 
     @staticmethod
-    def directed_forests(graphset=None):
+    def rooted_forests(roots=None, graphset=None):
         """Returns a DiGraphSet with directed forests.
         'directed forest' is also called 'brancing'.
 
@@ -1747,6 +1747,8 @@ class DiGraphSet(object):
           DiGraphSet([[], [(4, 1)], [(1, 4)], [(5, 4)], [(4, 5)], [(2, 1)], [(1, 2)],  ...
 
           Args:
+            roots: Optional. A list of vertices.
+
             graphset: Optional.  A DiGraphSet object.  Components to be
               stored are selected from this object.
 
@@ -1759,9 +1761,15 @@ class DiGraphSet(object):
             graph.append(
                 (pickle.dumps(e[0], protocol=0), pickle.dumps(e[1], protocol=0)))
 
+        rs = []
+        if roots is not None:
+          for root in roots:
+            assert root in DiGraphSet._vertices
+            rs.append(pickle.dumps(root, protocol=0))
+
         ss = None if graphset is None else graphset._ss
 
-        ss = _digraphillion._directed_forests(graph=graph, search_space=ss)
+        ss = _digraphillion._rooted_forests(graph=graph, roots=rs, search_space=ss)
         return DiGraphSet(ss)
 
     @staticmethod

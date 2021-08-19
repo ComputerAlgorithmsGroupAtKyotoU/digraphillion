@@ -123,6 +123,7 @@ setset SearchDirectedSTPath(const std::vector<edge_t>& digraph,
 }
 
 setset SearchDirectedForests(const std::vector<edge_t>& digraph,
+                             const std::vector<vertex_t>& roots,
                              const setset* search_space) {
   assert(static_cast<size_t>(setset::num_elems()) == digraph.size());
 
@@ -133,6 +134,11 @@ setset SearchDirectedForests(const std::vector<edge_t>& digraph,
   g.update();
   assert(static_cast<size_t>(g.edgeSize()) == digraph.size());
 
+  std::set<tdzdd::Digraph::VertexNumber> roots_set;
+  for (const auto& root : roots) {
+    roots_set.insert(g.getVertex(root));
+  }
+
   DdStructure<2> dd;
   if (search_space != NULL) {
     SapporoZdd f(search_space->zdd_, setset::max_elem() - setset::num_elems());
@@ -141,7 +147,7 @@ setset SearchDirectedForests(const std::vector<edge_t>& digraph,
     dd = DdStructure<2>(g.edgeSize());
   }
 
-  FrontierDirectedForestSpec spec(g);
+  FrontierDirectedForestSpec spec(g, roots_set);
   dd.zddSubset(spec);
   dd.zddReduce();
 

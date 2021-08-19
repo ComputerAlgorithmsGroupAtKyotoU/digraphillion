@@ -32,6 +32,7 @@ setset SearchDirectedSTPath(const std::vector<edge_t>& digraph,
                             const setset* search_space);
 
 setset SearchDirectedForests(const std::vector<edge_t>& digraph,
+                             const std::vector<vertex_t>& roots,
                              const setset* search_space);
 
 setset SearchRootedTrees(const std::vector<edge_t>& digraph, vertex_t root,

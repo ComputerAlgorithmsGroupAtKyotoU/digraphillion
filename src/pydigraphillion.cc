@@ -1179,6 +1179,30 @@ bool input_graph(PyObject* graph_obj,
   return true;
 }
 
+bool input_string_list(PyObject* list_obj, std::vector<std::string>& list) {
+  if (list_obj == NULL || list_obj == Py_None) {
+    PyErr_SetString(PyExc_TypeError, "no input");
+    return false;
+  }
+
+  PyObject* i = PyObject_GetIter(list_obj);
+  if (i == NULL) return false;
+  PyObject* vo;
+  while ((vo = PyIter_Next(i))) {
+    if (!PyBytes_Check(vo)) {
+      PyErr_SetString(PyExc_TypeError, "invalid input");
+      return false;
+    }
+    std::string v = PyBytes_AsString(vo);
+    if (v.find(',') != std::string::npos) {
+      PyErr_SetString(PyExc_TypeError, "invalid vertex in the graph");
+      return false;
+    }
+    list.push_back(v);
+  }
+  return true;
+}
+
 static PyObject* graphset_directed_cycles(PyObject*, PyObject* args,
                                           PyObject* kwds) {
   static char s1[] = "graph";
@@ -1294,15 +1318,17 @@ static PyObject* graphset_directed_st_path(PyObject*, PyObject* args,
   return reinterpret_cast<PyObject*>(ret);
 }
 
-static PyObject* graphset_directed_forests(PyObject*, PyObject* args,
-                                           PyObject* kwds) {
+static PyObject* graphset_rooted_forests(PyObject*, PyObject* args,
+                                         PyObject* kwds) {
   static char s1[] = "graph";
-  static char s2[] = "search_space";
-  static char* kwlist[3] = {s1, s2, NULL};
+  static char s2[] = "roots";
+  static char s3[] = "search_space";
+  static char* kwlist[4] = {s1, s2, s3, NULL};
   PyObject* graph_obj = NULL;
+  PyObject* roots_obj = NULL;
   PyObject* search_space_obj = NULL;
-  if (!PyArg_ParseTupleAndKeywords(args, kwds, "O|O", kwlist, &graph_obj,
-                                   &search_space_obj))
+  if (!PyArg_ParseTupleAndKeywords(args, kwds, "O|OO", kwlist, &graph_obj,
+                                   &roots_obj, &search_space_obj))
     return NULL;
 
   std::vector<std::pair<std::string, std::string> > graph;
@@ -1310,12 +1336,19 @@ static PyObject* graphset_directed_forests(PyObject*, PyObject* args,
     return NULL;
   }
 
+  std::vector<std::string> roots;
+  if (roots_obj != NULL && roots_obj != Py_None) {
+    if (!input_string_list(roots_obj, roots)) {
+      return NULL;
+    }
+  }
+
   digraphillion::setset* search_space = NULL;
   if (search_space_obj != NULL && search_space_obj != Py_None)
     search_space = reinterpret_cast<PySetsetObject*>(search_space_obj)->ss;
 
   digraphillion::setset ss =
-      digraphillion::SearchDirectedForests(graph, search_space);
+      digraphillion::SearchDirectedForests(graph, roots, search_space);
 
   PySetsetObject* ret = reinterpret_cast<PySetsetObject*>(
       PySetset_Type.tp_alloc(&PySetset_Type, 0));
@@ -1390,8 +1423,7 @@ static PyMethodDef module_methods[] = {
     {"_directed_st_path",
      reinterpret_cast<PyCFunction>(graphset_directed_st_path),
      METH_VARARGS | METH_KEYWORDS, ""},
-    {"_directed_forests",
-     reinterpret_cast<PyCFunction>(graphset_directed_forests),
+    {"_rooted_forests", reinterpret_cast<PyCFunction>(graphset_rooted_forests),
      METH_VARARGS | METH_KEYWORDS, ""},
     {"_rooted_trees", reinterpret_cast<PyCFunction>(graphset_rooted_trees),
      METH_VARARGS | METH_KEYWORDS, ""},
