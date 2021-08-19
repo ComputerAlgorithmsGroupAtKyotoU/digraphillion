@@ -33,8 +33,8 @@ GitHub repository
 | `gs.directed_cycles()`                       | Returns a new DiGraphSet with directed single cycles from `gs`             |
 | `gs.directed_hamiltonian_cycles()`           | Returns a new DiGraphSet with directed single hamiltonian cycles from `gs` |
 | `gs.directed_st_paths(s, t, is_hamiltonian)` | Returns a new DiGraphSet with directed st path from `gs`                   |
-| `gs.directed_forests()`                      | Returns a new DiGraphSet with directed forests (branching) from `gs`       |
-| `gs.rooted_trees(root, is_spanning`          | Returns a new DiGraphSet with rooted trees from `gs`                       |
+| `gs.rooted_forests(roots, is_spanning)`      | Returns a new DiGraphSet with rooted forests from `gs`                     |
+| `gs.rooted_trees(root, is_spanning)`         | Returns a new DiGraphSet with rooted trees from `gs`                       |
 
 ## References
 

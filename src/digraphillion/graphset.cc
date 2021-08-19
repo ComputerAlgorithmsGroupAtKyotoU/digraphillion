@@ -5,7 +5,7 @@
 #include "spec/FrontierDirectedHamiltonianCycle.hpp"
 #include "spec/FrontierDirectedSTPath.hpp"
 #include "spec/FrontierDirectedSingleCycle.hpp"
-#include "spec/FrontierForest.hpp"
+#include "spec/FrontierRootedForest.hpp"
 #include "spec/FrontierRootedTree.hpp"
 #include "subsetting/DdStructure.hpp"
 #include "subsetting/eval/ToZBDD.hpp"
@@ -123,7 +123,8 @@ setset SearchDirectedSTPath(const std::vector<edge_t>& digraph,
 }
 
 setset SearchDirectedForests(const std::vector<edge_t>& digraph,
-                             const setset* search_space) {
+                             const std::vector<vertex_t>& roots,
+                             bool is_spanning, const setset* search_space) {
   assert(static_cast<size_t>(setset::num_elems()) == digraph.size());
 
   Digraph g;
@@ -133,6 +134,11 @@ setset SearchDirectedForests(const std::vector<edge_t>& digraph,
   g.update();
   assert(static_cast<size_t>(g.edgeSize()) == digraph.size());
 
+  std::set<tdzdd::Digraph::VertexNumber> roots_set;
+  for (const auto& root : roots) {
+    roots_set.insert(g.getVertex(root));
+  }
+
   DdStructure<2> dd;
   if (search_space != NULL) {
     SapporoZdd f(search_space->zdd_, setset::max_elem() - setset::num_elems());
@@ -141,7 +147,7 @@ setset SearchDirectedForests(const std::vector<edge_t>& digraph,
     dd = DdStructure<2>(g.edgeSize());
   }
 
-  FrontierDirectedForestSpec spec(g);
+  FrontierRootedForestSpec spec(g, roots_set, is_spanning);
   dd.zddSubset(spec);
   dd.zddReduce();
 

@@ -2,6 +2,7 @@
 #define FRONTIER_FOREST_HPP
 
 #include <climits>
+#include <set>
 #include <vector>
 
 #include "FrontierData.hpp"
@@ -13,12 +14,16 @@ using namespace tdzdd;
 
 typedef unsigned short ushort;
 
-class FrontierDirectedForestSpec
-    : public tdzdd::PodArrayDdSpec<FrontierDirectedForestSpec,
+class FrontierRootedForestSpec
+    : public tdzdd::PodArrayDdSpec<FrontierRootedForestSpec,
                                    DirectedFrontierData, 2> {
  private:
   // input graph
   const tdzdd::Digraph& graph_;
+  // root verteces
+  const std::set<tdzdd::Digraph::VertexNumber> roots;
+  // spanning forest or not
+  bool is_spanning;
   // number of vertices
   const short n_;
   // number of edges
@@ -63,8 +68,12 @@ class FrontierDirectedForestSpec
   }
 
  public:
-  FrontierDirectedForestSpec(const tdzdd::Digraph& graph)
+  FrontierRootedForestSpec(const tdzdd::Digraph& graph,
+                           const std::set<tdzdd::Digraph::VertexNumber>& _roots,
+                           bool _is_spanning)
       : graph_(graph),
+        roots(_roots),
+        is_spanning(_is_spanning),
         n_(static_cast<short>(graph_.vertexSize())),
         m_(graph_.edgeSize()),
         fm_(graph_) {
@@ -138,9 +147,40 @@ class FrontierDirectedForestSpec
     for (size_t i = 0; i < leaving_vs.size(); ++i) {
       int v = leaving_vs[i];
 
-      // the in-degree of v must be 0 or 1.
-      if (getIndeg(data, v) > 1) {
-        return 0;
+      // vertex in a spanning forest must not be isolated
+      if (is_spanning) {
+        if (getIndeg(data, v) == 0 &&
+            getOutdeg(data, v) == 0) {  // the degree of v must be at least 1
+          return 0;
+        }
+      }
+
+      if (roots.size()) {
+        // roots are specified.
+        if (roots.count(v)) {
+          // the in-degree of a root vertex must be 0.
+          if (getIndeg(data, v) > 0) {
+            return 0;
+          }
+          // the out-degree of a root vertex must be positive.
+          if (getOutdeg(data, v) == 0) {
+            return 0;
+          }
+        } else {
+          // the in-degree of a non-root vertex must be 1 or the vertex is
+          // isolated.
+          bool ok = (getIndeg(data, v) == 1) ||
+                    (getIndeg(data, v) == 0 && getOutdeg(data, v) == 0);
+          if (!ok) {
+            return 0;
+          }
+        }
+      } else {
+        // root are not specified.
+        // the in-degree of a vertex must be 0 or 1.
+        if (getIndeg(data, v) > 1) {
+          return 0;
+        }
       }
 
       // Since deg and comp of v are never used until the end,
