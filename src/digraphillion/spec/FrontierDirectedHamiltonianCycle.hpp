@@ -185,7 +185,7 @@ class FrontierDirectedSingleHamiltonianCycleSpec
       // of v becomes determined.
       if (!samecomp_found) {
         // Here, deg of v is 2.
-        assert(getIndeg(data, v) == 1 && getOutdeg(data, v) == 1);
+        //assert(getIndeg(data, v) == 1 && getOutdeg(data, v) == 1);
 
         // Check whether there is a connected component
         // other than that of v, that is, the generated subgraph

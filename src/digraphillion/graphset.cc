@@ -1,6 +1,11 @@
+#ifdef NDEBUG
+# define NDEBUG_DISABLED
+# undef NDEBUG
+#endif
+
 #include "digraphillion/graphset.h"
 
-#include <assert.h>
+#include <cassert>
 
 #include "spec/FrontierDegreeSpecified.hpp"
 #include "spec/FrontierDirectedHamiltonianCycle.hpp"
@@ -210,9 +215,15 @@ setset SearchDirectedGraphs(
     for (auto i = in_degree_constraints->begin();
          i != in_degree_constraints->end(); ++i) {
       in_dc.setIndegConstraint(g.getVertex(i->first), &i->second);
+      std::cerr << "vertex:" << g.getVertex(i->first)
+                << " lower:" << (i->second).lowerBound()
+                << " upper:" << (i->second).upperBound() << std::endl;
     }
+    std::cerr << "subset start" << std::endl;
     dd.zddSubset(in_dc);
+    std::cerr << "subset ok" << std::endl;
     dd.zddReduce();
+    std::cerr << "reduce ok" << std::endl;
   }
 
   FrontierDegreeSpecifiedSpec out_dc(g);
@@ -220,6 +231,7 @@ setset SearchDirectedGraphs(
     for (auto i = out_degree_constraints->begin();
          i != out_degree_constraints->end(); i++) {
       out_dc.setOutdegConstraint(g.getVertex(i->first), &i->second);
+      std::cerr << i->first << " " << g.getVertex(i->first) << std::endl;
     }
     dd.zddSubset(out_dc);
     dd.zddReduce();

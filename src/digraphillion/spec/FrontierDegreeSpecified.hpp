@@ -12,8 +12,6 @@
 
 using namespace tdzdd;
 
-typedef unsigned char uchar;
-
 class FrontierDegreeSpecifiedSpec
     : public tdzdd::PodArrayDdSpec<FrontierDegreeSpecifiedSpec,
                                    DirectedFrontierData, 2> {
@@ -57,7 +55,8 @@ class FrontierDegreeSpecifiedSpec
   }
 
  public:
-  FrontierDegreeSpecifiedSpec(const tdzdd::Digraph& graph)
+  FrontierDegreeSpecifiedSpec(const tdzdd::Digraph& graph,
+                              IntSubset const* c = 0)
       : graph_(graph),
         n_(static_cast<short>(graph_.vertexSize())),
         m_(graph_.edgeSize()),
@@ -71,12 +70,12 @@ class FrontierDegreeSpecifiedSpec
     // todo: check all the degrees is at most 256
 
     setArraySize(fm_.getMaxFrontierSize());
-    int m = graph.vertexSize();
+    int m = graph_.vertexSize();
     in_constraints.resize(m + 1);
     out_constraints.resize(m + 1);
     for (int v = 1; v <= m; v++) {
-      in_constraints[v] = 0;
-      out_constraints[v] = 0;
+      in_constraints[v] = c;
+      out_constraints[v] = c;
     }
   }
 
@@ -115,17 +114,17 @@ class FrontierDegreeSpecifiedSpec
       setOutdeg(data, v, 0);
     }
 
-    // vertices on the frontier
-    const std::vector<int>& frontier_vs = fm_.getFrontierVs(edge_index);
-
     if (value == 1) {  // if we take the edge (go to 1-arc)
       // increment deg of v1 and v2 (recall that edge = {v1, v2})
       auto outdeg1 = getOutdeg(data, edge.v1);
+      assert(1 <= edge.v1 && edge.v1 < (int)out_constraints.size());
       if (!out_constraints[edge.v1]->contains(outdeg1 + 1)) {
         return 0;
       }
+
       auto indeg2 = getIndeg(data, edge.v2);
-      if (!in_constraints[edge.v2]->contains(indeg2)) {
+      assert(1 <= edge.v2 && edge.v2 < (int)in_constraints.size());
+      if (!in_constraints[edge.v2]->contains(indeg2 + 1)) {
         return 0;
       }
       setIndeg(data, edge.v2, indeg2 + 1);
@@ -138,6 +137,8 @@ class FrontierDegreeSpecifiedSpec
       int v = leaving_vs[i];
 
       int indeg = getIndeg(data, v), outdeg = getOutdeg(data, v);
+      assert(1 <= v && v < (int)in_constraints.size());
+      assert(1 <= v && v < (int)out_constraints.size());
       if (!in_constraints[v]->contains(indeg) ||
           !out_constraints[v]->contains(outdeg)) {
         return 0;

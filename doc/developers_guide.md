@@ -23,9 +23,16 @@ see also [Graphillion Developers Guide](https://hackmd.io/@yamazaki2021/BJbLdp5a
 6. `digraphillion/test/test_digraphillion.py` にテスト追加
 7. `README.md` 更新
 
-## Attention
+## Tips
 
 - Python から渡す頂点は `pickle.dumps()` で変換する
+- `-DNDEBUG` を無効化したい場合は以下のマクロをファイル冒頭に追加する
+```
+#ifdef NDEBUG
+# define NDEBUG_DISABLED
+# undef NDEBUG
+#endif
+```
 
 ## Links
 
