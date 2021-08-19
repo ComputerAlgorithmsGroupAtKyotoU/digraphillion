@@ -193,6 +193,7 @@ class TestDigraphillion(unittest.TestCase):
             in_dc[v] = out_dc[v] = range(1, 2)
         gs = DiGraphSet.graphs(in_degree_constraints=in_dc,
                                out_degree_constraints=out_dc)
+        print(len(gs))
         for gg in gs:
             print(gg)
 

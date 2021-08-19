@@ -1,6 +1,6 @@
 #ifdef NDEBUG
-# define NDEBUG_DISABLED
-# undef NDEBUG
+#define NDEBUG_DISABLED
+#undef NDEBUG
 #endif
 
 #include "digraphillion/graphset.h"
@@ -25,25 +25,6 @@ using std::pair;
 using std::set;
 using std::vector;
 using namespace tdzdd;
-
-Range::Range(int max) : min_(0), max_(max - 1), step_(1) {
-  assert(this->min_ <= this->max_);
-}
-
-Range::Range(int min, int max, int step)
-    : min_(min), max_(max - 1), step_(step) {
-  assert(this->min_ <= this->max_);
-  assert(this->step_ > 0);
-}
-
-bool Range::contains(int x) const {
-  if (x < this->min_ || this->max_ < x) return false;
-  return (x - this->min_) % this->step_ == 0;
-}
-
-int Range::lowerBound() const { return this->min_; }
-
-int Range::upperBound() const { return this->max_; }
 
 setset SearchDirectedCycles(const std::vector<edge_t>& digraph,
                             const setset* search_space) {
@@ -214,24 +195,17 @@ setset SearchDirectedGraphs(
   if (in_degree_constraints != NULL) {
     for (auto i = in_degree_constraints->begin();
          i != in_degree_constraints->end(); ++i) {
-      in_dc.setIndegConstraint(g.getVertex(i->first), &i->second);
-      std::cerr << "vertex:" << g.getVertex(i->first)
-                << " lower:" << (i->second).lowerBound()
-                << " upper:" << (i->second).upperBound() << std::endl;
+      in_dc.setIndegConstraint(g.getVertex(i->first), i->second);
     }
-    std::cerr << "subset start" << std::endl;
     dd.zddSubset(in_dc);
-    std::cerr << "subset ok" << std::endl;
     dd.zddReduce();
-    std::cerr << "reduce ok" << std::endl;
   }
 
   FrontierDegreeSpecifiedSpec out_dc(g);
   if (out_degree_constraints != NULL) {
     for (auto i = out_degree_constraints->begin();
          i != out_degree_constraints->end(); i++) {
-      out_dc.setOutdegConstraint(g.getVertex(i->first), &i->second);
-      std::cerr << i->first << " " << g.getVertex(i->first) << std::endl;
+      out_dc.setOutdegConstraint(g.getVertex(i->first), i->second);
     }
     dd.zddSubset(out_dc);
     dd.zddReduce();
