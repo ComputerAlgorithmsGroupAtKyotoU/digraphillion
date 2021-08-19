@@ -28,13 +28,14 @@ GitHub repository
 
 ## Methods for digraph
 
-| Method                                       | Description                                                                |
-| :------------------------------------------- | :------------------------------------------------------------------------- |
-| `gs.directed_cycles()`                       | Returns a new DiGraphSet with directed single cycles from `gs`             |
-| `gs.directed_hamiltonian_cycles()`           | Returns a new DiGraphSet with directed single hamiltonian cycles from `gs` |
-| `gs.directed_st_paths(s, t, is_hamiltonian)` | Returns a new DiGraphSet with directed st path from `gs`                   |
-| `gs.rooted_forests(roots, is_spanning)`      | Returns a new DiGraphSet with rooted forests from `gs`                     |
-| `gs.rooted_trees(root, is_spanning)`         | Returns a new DiGraphSet with rooted trees from `gs`                       |
+| Method                                                     | Description                                                                |
+| :--------------------------------------------------------- | :------------------------------------------------------------------------- |
+| `gs.graphs(in_degree_constraints, out_degree_constraints)` | Returns a new DiGraphSet with degree constraints from `gs`                 |
+| `gs.directed_cycles()`                                     | Returns a new DiGraphSet with directed single cycles from `gs`             |
+| `gs.directed_hamiltonian_cycles()`                         | Returns a new DiGraphSet with directed single hamiltonian cycles from `gs` |
+| `gs.directed_st_paths(s, t, is_hamiltonian)`               | Returns a new DiGraphSet with directed st path from `gs`                   |
+| `gs.rooted_forests(roots, is_spanning)`                    | Returns a new DiGraphSet with rooted forests from `gs`                     |
+| `gs.rooted_trees(root, is_spanning)`                       | Returns a new DiGraphSet with rooted trees from `gs`                       |
 
 ## References
 

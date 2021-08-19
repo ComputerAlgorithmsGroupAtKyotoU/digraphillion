@@ -1,6 +1,6 @@
 #include "digraphillion/graphset.h"
 
-#include <cassert>
+#include <assert.h>
 
 #include "spec/FrontierDegreeSpecified.hpp"
 #include "spec/FrontierDirectedHamiltonianCycle.hpp"

@@ -1817,12 +1817,20 @@ class DiGraphSet(object):
 
         Examples:
           >>> DiGraphSet.graphs()
-
+          DiGraphSet([[], [(4, 1)], [(1, 4)], [(5, 4)], [(4, 5)], [(2, 1)], [(1, 2)],  ...
 
           Args:
-            in_degree_constraints: Optional.
+            in_degree_constraints: Optional. A dict with a vertex and a
+            range or int.  The degree of a vertex is restricted by the
+            range.  For `{1: 2, 6: range(2)}`, the degree of vertex 1
+            is 2 and that of 6 is less than 2, while others are not
+            cared.
 
-            out_degree_constraints: Optional.
+            out_degree_constraints: Optional. A dict with a vertex and a
+            range or int.  The degree of a vertex is restricted by the
+            range.  For `{1: 2, 6: range(2)}`, the degree of vertex 1
+            is 2 and that of 6 is less than 2, while others are not
+            cared.
 
             graphset: Optional.  A DiGraphSet object.  Components to be
               stored are selected from this object.
