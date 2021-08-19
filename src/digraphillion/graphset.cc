@@ -1,8 +1,3 @@
-#ifdef NDEBUG
-#define NDEBUG_DISABLED
-#undef NDEBUG
-#endif
-
 #include "digraphillion/graphset.h"
 
 #include <cassert>

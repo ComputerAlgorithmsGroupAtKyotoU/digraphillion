@@ -189,13 +189,43 @@ class TestDigraphillion(unittest.TestCase):
 
         in_dc = {}
         out_dc = {}
+        # cycles
         for v in DiGraphSet._vertices:
             in_dc[v] = out_dc[v] = range(1, 2)
         gs = DiGraphSet.graphs(in_degree_constraints=in_dc,
                                out_degree_constraints=out_dc)
-        print(len(gs))
-        for gg in gs:
-            print(gg)
+        self.assertEqual(len(gs), 9)
+        self.assertTrue([(1, 2), (2, 3), (3, 6), (6, 5), (5, 4), (4, 1)] in gs)
+        self.assertTrue([(1, 4), (4, 5), (5, 6), (6, 3), (3, 2), (2, 1)] in gs)
+        self.assertTrue([(1, 2), (2, 5), (5, 4), (4, 1)] not in gs)
+
+        in_dc = {}
+        out_dc = {}
+        # all subgraphs
+        for v in DiGraphSet._vertices:
+            in_dc[v] = out_dc[v] = range(0, 4)
+        gs = DiGraphSet.graphs(in_degree_constraints=in_dc,
+                               out_degree_constraints=out_dc)
+        self.assertEqual(len(gs), 2**len(universe_edges))
+
+    def test_trees_in_graphs(self):
+        DiGraphSet.set_universe(universe_edges)
+
+        root = 1
+        trees = DiGraphSet.rooted_trees(root, is_spanning=True)
+
+        in_dc = {}
+        out_dc = {}
+        for v in range(1, len(DiGraphSet._vertices)+1):
+            if v == root:
+                in_dc[v] = range(0, 1)
+                out_dc[v] = range(1, len(DiGraphSet._vertices))
+            else:
+                in_dc[v] = range(1, 2)
+        gs = DiGraphSet.graphs(in_degree_constraints=in_dc,
+                               out_degree_constraints=out_dc)
+
+        self.assertTrue(trees.issubset(gs))
 
 
 if __name__ == '__main__':
