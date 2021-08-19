@@ -10,10 +10,9 @@
 using namespace tdzdd;
 
 typedef unsigned char uchar;
-typedef unsigned char FrontierDSData;
 
 class FrontierDegreeSpecifiedSpec
-    : public tdzdd::PodArrayDdSpec<FrontierDegreeSpecifiedSpec, FrontierDSData,
+    : public tdzdd::PodArrayDdSpec<FrontierDegreeSpecifiedSpec, DirectedFrontierData,
                                    2> {
  private:
   // input graph
@@ -25,9 +24,7 @@ class FrontierDegreeSpecifiedSpec
 
   const FrontierManager fm_;
 
-  const int fixedDegStart_;
   const std::vector<IntSubset*> degRanges_;
-  const std::vector<bool> storingList_;
 
   // This function gets deg of v.
   int getDeg(FrontierDSData* data, int v) const {
@@ -37,37 +34,6 @@ class FrontierDegreeSpecifiedSpec
   // This function sets deg of v to be d.
   void setDeg(FrontierDSData* data, int v, int d) const {
     data[fm_.vertexToPos(v) * 2] = static_cast<uchar>(d);
-  }
-
-  // This function gets comp of v.
-  int getComp(FrontierDSData* data, int v, int index) const {
-    return fm_.posToVertex(index, data[fm_.vertexToPos(v) * 2 + 1]);
-    // return data[fm_.vertexToPos(v) * 2 + 1];
-  }
-
-  // This function sets comp of v to be c.
-  void setComp(FrontierDSData* data, int v, int c) const {
-    data[fm_.vertexToPos(v) * 2 + 1] = fm_.vertexToPos(c);
-    // data[fm_.vertexToPos(v) * 2 + 1] = c;
-  }
-
-  void incrementFixedDeg(FrontierDSData* data, int d) const {
-    ++data[fixedDegStart_ + d];
-  }
-
-  bool checkFixedDegUpper(FrontierDSData* data, int d) const {
-    return (data[fixedDegStart_ + d] < degRanges_[d]->upperBound());
-  }
-
-  bool checkFixedDeg(FrontierDSData* data) const {
-    for (size_t deg = 0; deg < degRanges_.size(); ++deg) {
-      if (!degRanges_[deg]->contains(data[fixedDegStart_ + deg])) {
-        // std::cerr << "d: " << deg << " " << fixedDegStart_ + deg << " " <<
-        // data[fixedDegStart_ + deg] << std::endl;
-        return false;
-      }
-    }
-    return true;
   }
 
   int getDegUpper(FrontierDSData* data) const {
@@ -87,19 +53,6 @@ class FrontierDegreeSpecifiedSpec
     }
   }
 
-  std::vector<bool> getStoringList(
-      const std::vector<IntSubset*>& degRanges) const {
-    std::vector<bool> storingList;
-    for (size_t i = 0; i < degRanges.size(); ++i) {
-      if (degRanges[i]->lowerBound() == 0 && degRanges[i]->upperBound() >= n_) {
-        storingList.push_back(false);
-      } else {
-        storingList.push_back(true);
-      }
-    }
-    return storingList;
-  }
-
  public:
   FrontierDegreeSpecifiedSpec(const tdzdd::Graph& graph,
                               const std::vector<IntSubset*>& degRanges)
@@ -108,8 +61,7 @@ class FrontierDegreeSpecifiedSpec
         m_(graph_.edgeSize()),
         fm_(graph_),
         fixedDegStart_(fm_.getMaxFrontierSize() * 2),
-        degRanges_(degRanges),
-        storingList_(getStoringList(degRanges)) {
+        degRanges_(degRanges) {
     if (graph_.vertexSize() > SHRT_MAX) {  // SHRT_MAX == 32767
       std::cerr << "The number of vertices should be at most " << SHRT_MAX
                 << std::endl;
@@ -143,8 +95,6 @@ class FrontierDegreeSpecifiedSpec
       int v = entering_vs[i];
       // initially the value of deg is 0
       setDeg(data, v, 0);
-      // initially the value of comp is the vertex number itself
-      setComp(data, v, v);
     }
 
     // vertices on the frontier
@@ -162,21 +112,6 @@ class FrontierDegreeSpecifiedSpec
       }
       setDeg(data, edge.v1, getDeg(data, edge.v1) + 1);
       setDeg(data, edge.v2, getDeg(data, edge.v2) + 1);
-
-      short c1 = getComp(data, edge.v1, edge_index);
-      short c2 = getComp(data, edge.v2, edge_index);
-      if (c1 != c2) {  // connected components c1 and c2 become connected
-        short cmin = std::min(c1, c2);
-        short cmax = std::max(c1, c2);
-
-        // replace component number cmin with cmax
-        for (size_t i = 0; i < frontier_vs.size(); ++i) {
-          int v = frontier_vs[i];
-          if (getComp(data, v, edge_index) == cmin) {
-            setComp(data, v, cmax);
-          }
-        }
-      }
     }
 
     // vertices that are leaving the frontier
@@ -185,12 +120,6 @@ class FrontierDegreeSpecifiedSpec
       int v = leaving_vs[i];
 
       int d = getDeg(data, v);
-      if (!checkFixedDegUpper(data, d)) {
-        return 0;
-      }
-      if (storingList_[d]) {
-        incrementFixedDeg(data, d);
-      }
 
       bool samecomp_found = false;
       bool nonisolated_found = false;
@@ -214,10 +143,6 @@ class FrontierDegreeSpecifiedSpec
         }
         if (found_leaved) {
           continue;
-        }
-        // w has the component number same as that of v
-        if (getComp(data, w, edge_index) == getComp(data, v, edge_index)) {
-          samecomp_found = true;
         }
         // The degree of w is at least 1.
         if (getDeg(data, w) > 0) {
@@ -249,10 +174,9 @@ class FrontierDegreeSpecifiedSpec
           }
         }
       }
-      // Since deg and comp of v are never used until the end,
+      // Since deg of v is never used until the end,
       // we erase the values.
       setDeg(data, v, -1);
-      setComp(data, v, -1);
     }
     if (level == 1) {
       // If we come here, the edge set is empty (taking no edge).
