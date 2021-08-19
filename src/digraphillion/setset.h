@@ -10,11 +10,9 @@
 #include <vector>
 
 #include "digraphillion/type.h"
+#include "subsetting/util/IntRange.hpp"
 
 namespace digraphillion {
-
-class Range;
-
 class setset {
  public:
   class iterator
@@ -186,6 +184,12 @@ class setset {
   friend setset SearchRootedTrees(const std::vector<edge_t>& digraph,
                                   vertex_t root, bool is_spanning,
                                   const setset* search_space);
+
+  friend setset SearchDirectedGraphs(
+      const std::vector<edge_t>& digraph,
+      const std::map<vertex_t, tdzdd::Range>* in_degree_constraints,
+      const std::map<vertex_t, tdzdd::Range>* out_degree_constraints,
+      const setset* search_space);
 };
 
 }  // namespace digraphillion

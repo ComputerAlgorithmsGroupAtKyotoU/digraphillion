@@ -142,7 +142,7 @@ class DiGraphSet(object):
             self._ss = setset(obj)
         methods = ['directed_cycles',
                    'directed_hamiltonian_cycles', 'directed_st_paths', 'rooted_forests',
-                   'rooted_trees', ]
+                   'rooted_trees', 'graphs']
         for method in methods:
             setattr(self, method, partial(
                 getattr(DiGraphSet, method), DiGraphSet=self))
@@ -1809,6 +1809,73 @@ class DiGraphSet(object):
 
         ss = _digraphillion._rooted_trees(
             graph=graph, root=pickle.dumps(root, protocol=0), is_spanning=is_spanning, search_space=ss)
+        return DiGraphSet(ss)
+
+    @staticmethod
+    def graphs(in_degree_constraints=None, out_degree_constraints=None, graphset=None):
+        """Returns a DiGraphSet with directed single hamiltonian cycles.
+
+        Examples:
+          >>> DiGraphSet.graphs()
+          DiGraphSet([[], [(4, 1)], [(1, 4)], [(5, 4)], [(4, 5)], [(2, 1)], [(1, 2)],  ...
+
+          Args:
+            in_degree_constraints: Optional. A dict with a vertex and a
+            range or int.  The degree of a vertex is restricted by the
+            range.  For `{1: 2, 6: range(2)}`, the degree of vertex 1
+            is 2 and that of 6 is less than 2, while others are not
+            cared.
+
+            out_degree_constraints: Optional. A dict with a vertex and a
+            range or int.  The degree of a vertex is restricted by the
+            range.  For `{1: 2, 6: range(2)}`, the degree of vertex 1
+            is 2 and that of 6 is less than 2, while others are not
+            cared.
+
+            graphset: Optional.  A DiGraphSet object.  Components to be
+              stored are selected from this object.
+
+          Returns:
+            A new DiGraphSet object.
+        """
+        graph = []
+        for e in setset.universe():
+            assert e[0] in DiGraphSet._vertices and e[1] in DiGraphSet._vertices
+            graph.append(
+                (pickle.dumps(e[0], protocol=0), pickle.dumps(e[1], protocol=0)))
+
+        in_dc = None
+        if in_degree_constraints is not None:
+            in_dc = {}
+            for v, r in viewitems(in_degree_constraints):
+                if v not in DiGraphSet._vertices:
+                    raise KeyError(v)
+                if isinstance(r, int):
+                    in_dc[pickle.dumps(v, protocol=0)] = (r, r + 1, 1)
+                elif len(r) == 1:
+                    in_dc[pickle.dumps(v, protocol=0)] = (r[0], r[0] + 1, 1)
+                else:
+                    in_dc[pickle.dumps(v, protocol=0)] = (
+                        r[0], r[-1] + 1, r[1] - r[0])
+
+        out_dc = None
+        if out_degree_constraints is not None:
+            out_dc = {}
+            for v, r in viewitems(out_degree_constraints):
+                if v not in DiGraphSet._vertices:
+                    raise KeyError(v)
+                if isinstance(r, int):
+                    out_dc[pickle.dumps(v, protocol=0)] = (r, r + 1, 1)
+                elif len(r) == 1:
+                    out_dc[pickle.dumps(v, protocol=0)] = (r[0], r[0] + 1, 1)
+                else:
+                    out_dc[pickle.dumps(v, protocol=0)] = (
+                        r[0], r[-1] + 1, r[1] - r[0])
+
+        ss = None if graphset is None else graphset._ss
+
+        ss = _digraphillion._directed_graphs(
+            graph=graph, in_degree_constraints=in_dc, out_degree_constraints=out_dc, search_space=ss)
         return DiGraphSet(ss)
 
     @staticmethod
