@@ -1203,6 +1203,34 @@ bool input_string_list(PyObject* list_obj, std::vector<std::string>& list) {
   return true;
 }
 
+bool input_vertex_to_range_map(
+    PyObject* map_obj, std::map<std::string, digraphillion::Range>& mp) {
+  PyObject* vo;
+  PyObject* lo;
+  Py_ssize_t pos = 0;
+  while (PyDict_Next(map_obj, &pos, &vo, &lo)) {
+    if (!PyBytes_Check(vo)) {
+      PyErr_SetString(PyExc_TypeError, "invalid vertex in map object");
+      return false;
+    }
+    std::string vertex = PyBytes_AsString(vo);
+    PyObject* i = PyObject_GetIter(lo);
+    if (i == NULL) return false;
+    std::vector<int> r;
+    PyObject* io;
+    while ((io = PyIter_Next(i))) {
+      if (!PyInt_Check(io)) {
+        Py_DECREF(io);
+        PyErr_SetString(PyExc_TypeError, "invalid degree in map object");
+        return false;
+      }
+      r.push_back(PyInt_AsLong(io));
+    }
+    mp[vertex] = digraphillion::Range(r[0], r[1], r[2]);
+  }
+  return true;
+}
+
 static PyObject* graphset_directed_cycles(PyObject*, PyObject* args,
                                           PyObject* kwds) {
   static char s1[] = "graph";
@@ -1349,8 +1377,8 @@ static PyObject* graphset_rooted_forests(PyObject*, PyObject* args,
   if (search_space_obj != NULL && search_space_obj != Py_None)
     search_space = reinterpret_cast<PySetsetObject*>(search_space_obj)->ss;
 
-  digraphillion::setset ss =
-      digraphillion::SearchDirectedForests(graph, roots, is_spanning, search_space);
+  digraphillion::setset ss = digraphillion::SearchDirectedForests(
+      graph, roots, is_spanning, search_space);
 
   PySetsetObject* ret = reinterpret_cast<PySetsetObject*>(
       PySetset_Type.tp_alloc(&PySetset_Type, 0));
@@ -1402,6 +1430,62 @@ static PyObject* graphset_rooted_trees(PyObject*, PyObject* args,
   return reinterpret_cast<PyObject*>(ret);
 }
 
+static PyObject* graphset_directed_graphs(PyObject*, PyObject* args,
+                                          PyObject* kwds) {
+  static char s1[] = "graph";
+  static char s2[] = "in_degree_constraints";
+  static char s3[] = "out_degree_constraints";
+  static char s4[] = "search_space";
+  static char* kwlist[] = {s1, s2, s3, s4, NULL};
+  PyObject* graph_obj = NULL;
+  PyObject* in_degree_constraints_obj = NULL;
+  PyObject* out_degree_constraints_obj = NULL;
+  PyObject* search_space_obj = NULL;
+  if (!PyArg_ParseTupleAndKeywords(
+          args, kwds, "O|OOO", kwlist, &graph_obj, &in_degree_constraints_obj,
+          &out_degree_constraints_obj, &search_space_obj))
+    return NULL;
+
+  std::vector<std::pair<std::string, std::string> > graph;
+  if (!input_graph(graph_obj, graph)) {
+    return NULL;
+  }
+
+  std::map<std::string, digraphillion::Range> in_degree_constraints_entity;
+  std::map<std::string, digraphillion::Range>* in_degree_constraints = NULL;
+  if (in_degree_constraints_obj != NULL &&
+      in_degree_constraints_obj != Py_None) {
+    in_degree_constraints = &in_degree_constraints_entity;
+    if (!input_vertex_to_range_map(in_degree_constraints_obj,
+                                   in_degree_constraints_entity)) {
+      return NULL;
+    }
+  }
+
+  std::map<std::string, digraphillion::Range> out_degree_constrains_entity;
+  std::map<std::string, digraphillion::Range>* out_degree_constrains = NULL;
+  if (out_degree_constraints_obj != NULL &&
+      out_degree_constraints_obj != Py_None) {
+    out_degree_constrains = &out_degree_constrains_entity;
+    if (!input_vertex_to_range_map(out_degree_constraints_obj,
+                                   out_degree_constrains_entity)) {
+      return NULL;
+    }
+  }
+
+  digraphillion::setset* search_space = NULL;
+  if (search_space_obj != NULL && search_space_obj != Py_None)
+    search_space = reinterpret_cast<PySetsetObject*>(search_space_obj)->ss;
+
+  digraphillion::setset ss = digraphillion::SearchDirectedGraphs(
+      graph, in_degree_constraints, out_degree_constrains, search_space);
+
+  PySetsetObject* ret = reinterpret_cast<PySetsetObject*>(
+      PySetset_Type.tp_alloc(&PySetset_Type, 0));
+  ret->ss = new digraphillion::setset(ss);
+  return reinterpret_cast<PyObject*>(ret);
+}
+
 static PyObject* graphset_show_messages(PySetsetObject* self, PyObject* obj) {
   int ret = digraphillion::ShowMessages(PyObject_IsTrue(obj));
   if (ret)
@@ -1428,6 +1512,9 @@ static PyMethodDef module_methods[] = {
     {"_rooted_forests", reinterpret_cast<PyCFunction>(graphset_rooted_forests),
      METH_VARARGS | METH_KEYWORDS, ""},
     {"_rooted_trees", reinterpret_cast<PyCFunction>(graphset_rooted_trees),
+     METH_VARARGS | METH_KEYWORDS, ""},
+    {"_directed_graphs",
+     reinterpret_cast<PyCFunction>(graphset_directed_graphs),
      METH_VARARGS | METH_KEYWORDS, ""},
     {"_show_messages", reinterpret_cast<PyCFunction>(graphset_show_messages),
      METH_O, ""},

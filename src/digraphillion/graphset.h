@@ -38,6 +38,12 @@ setset SearchDirectedForests(const std::vector<edge_t>& digraph,
 setset SearchRootedTrees(const std::vector<edge_t>& digraph, vertex_t root,
                          bool is_spanning, const setset* search_space);
 
+setset SearchDirectedGraphs(
+    const std::vector<edge_t>& digraph,
+    const std::map<vertex_t, Range>* in_degree_constraints,
+    const std::map<vertex_t, Range>* out_degree_constraints,
+    const setset* search_space);
+
 bool ShowMessages(bool flag = true);
 
 }  // namespace digraphillion

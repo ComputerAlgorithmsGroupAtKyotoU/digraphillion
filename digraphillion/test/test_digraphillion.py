@@ -181,6 +181,21 @@ class TestDigraphillion(unittest.TestCase):
             spanning_trees = DiGraphSet.rooted_trees(root, is_spanning)
             self.assertEqual(gs, spanning_trees)
 
+    def test_graphs(self):
+        DiGraphSet.set_universe(universe_edges)
+
+        gs = DiGraphSet.graphs()
+        self.assertEqual(len(gs), 2**len(universe_edges))
+
+        in_dc = {}
+        out_dc = {}
+        for v in DiGraphSet._vertices:
+            in_dc[v] = out_dc[v] = range(1, 2)
+        #gs = DiGraphSet.graphs(in_degree_constraints=in_dc,
+        #                       out_degree_constraints=out_dc)
+        #for gg in gs:
+        #    print(gg)
+
 
 if __name__ == '__main__':
     unittest.main()
