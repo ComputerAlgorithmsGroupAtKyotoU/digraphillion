@@ -187,6 +187,9 @@ class TestDigraphillion(unittest.TestCase):
         gs = DiGraphSet.graphs()
         self.assertEqual(len(gs), 2**len(universe_edges))
 
+    def test_degree_constraints(self):
+        DiGraphSet.set_universe(universe_edges)
+
         in_dc = {}
         out_dc = {}
         # cycles
@@ -207,6 +210,30 @@ class TestDigraphillion(unittest.TestCase):
         gs = DiGraphSet.graphs(in_degree_constraints=in_dc,
                                out_degree_constraints=out_dc)
         self.assertEqual(len(gs), 2**len(universe_edges))
+
+        in_dc = {}
+        for v in DiGraphSet._vertices:
+            in_dc[v] = range(1, 2)
+        gs = DiGraphSet.graphs(in_degree_constraints=in_dc)
+        self.assertEqual(len(gs), 2**4 * 3**2)
+
+        in_dc = {}
+        for v in DiGraphSet._vertices:
+            in_dc[v] = range(1, 4)
+        gs = DiGraphSet.graphs(in_degree_constraints=in_dc)
+        self.assertEqual(len(gs), 3**4 * 7**2)
+
+        out_dc = {}
+        for v in DiGraphSet._vertices:
+            out_dc[v] = range(1, 2)
+        gs = DiGraphSet.graphs(out_degree_constraints=out_dc)
+        self.assertEqual(len(gs), 2**4 * 3**2)
+
+        out_dc = {}
+        for v in DiGraphSet._vertices:
+            out_dc[v] = range(1, 4)
+        gs = DiGraphSet.graphs(out_degree_constraints=out_dc)
+        self.assertEqual(len(gs), 3**4 * 7**2)
 
     def test_trees_in_graphs(self):
         DiGraphSet.set_universe(universe_edges)
