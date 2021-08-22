@@ -27,5 +27,7 @@ setup(
         extra_compile_args=['-march=native'],
         extra_link_args=[],
     ), ],
+    author=release.authors[0][0],
+    author_email=release.authors[0][1],
     test_suite='digraphillion.test'
 )
