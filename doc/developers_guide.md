@@ -15,13 +15,14 @@
 
 see also [Graphillion Developers Guide](https://hackmd.io/@yamazaki2021/BJbLdp5au).
 
-1. `src/digraphillion/spec` に spec を追加
+1. `src/digraphillion/spec/` に spec を追加
 2. `src/digraphillion/graphset.cc` に呼び出し関数を実装
 3. `src/digraphillion/setset.h` に friend 関数として追加
-4. `src/digraphillion.cc` に Python とのインターフェースを実装
+4. `src/pydigraphillion.cc` に Python とのインターフェースを実装
 5. `digrpahillion/graphset.py` に Python 側関数を実装
 6. `digraphillion/test/test_digraphillion.py` にテスト追加
 7. `README.md` 更新
+8. `digraphillion/release.py` でバージョン番号を更新
 
 ## Tips
 
@@ -41,6 +42,4 @@ see also [Graphillion Developers Guide](https://hackmd.io/@yamazaki2021/BJbLdp5a
 
 ## Todo
 
-- license 表記
 - test 追加 (tox に移行?)
-- directed forest ? branching?
