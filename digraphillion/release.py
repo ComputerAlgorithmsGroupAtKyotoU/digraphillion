@@ -18,6 +18,6 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-version = '0.9.1'
+version = '1.0.0'
 data = ''
 authors = (('Computer Algorithm Group At Kyoto University', 'webmaster@algo.cce.i.kyoto-u.ac.jp'))
