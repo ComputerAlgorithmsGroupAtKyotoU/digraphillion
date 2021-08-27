@@ -39,7 +39,7 @@ see also [Graphillion](https://github.com/takemaru/graphillion#installing).
 |:----------------|:------------------------------|:---------------------------------------------------|
 | vertex          | any hashable object           | `1`, `'v1'`, `(x, y)`                              |
 | directed edge   | tuple of vertices             | `(1, 2)`, `(2, 1)`                                 |
-| digraph         | list of directed edges        | `[(1, 2, -1.5), (1, 3)]`                           |
+| digraph         | list of directed edges        | `[(1, 2), (2, 1), (1, 3)]`                           |
 | set of digraphs | DiGraphSet object             | `DiGraphSet([[(1, 2), (1, 3)], [(1, 2), (2, 1)]])` |
 
 - the order of vertices is important.
