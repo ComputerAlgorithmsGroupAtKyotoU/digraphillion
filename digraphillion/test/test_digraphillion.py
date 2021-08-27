@@ -18,8 +18,10 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
+import graphillion
 from digraphillion import DiGraphSet
 import unittest
+from graphillion import GraphSet
 
 """
 1 <-> 2 <-> 3
@@ -274,6 +276,21 @@ class TestDigraphillion(unittest.TestCase):
 
         self.assertTrue(trees.issubset(gs))
 
+    def test_with_graphillion(self):
+        graphillion_universe = [e1, e2, e3, e4, e5, e6, e7]
+        GraphSet.set_universe(graphillion_universe)
+        DiGraphSet.set_universe(graphillion_universe)
+
+        root = 1
+        trees_g = GraphSet.trees(root)
+        trees_dg = DiGraphSet.rooted_trees(root)
+
+        self.assertEqual(len(trees_g), 45)
+        self.assertTrue([] in trees_g)
+        self.assertTrue([(1, 2), (1, 4), (2, 5), (4, 5)] not in trees_g)
+
+        self.assertTrue([(1, 2), (1, 4), (4, 5), (5, 6), (2, 3)] in trees_dg)
+        self.assertTrue([(1, 2), (2, 5), (5, 4), (4, 1)] not in trees_dg)
 
 if __name__ == '__main__':
     unittest.main()
