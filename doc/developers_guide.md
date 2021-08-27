@@ -11,6 +11,10 @@
   - 双方向辺に対応
 - python2, cygwin 等の動作に必要な部分は割愛
 
+- Graphillion では edge (1, 2) と edge (2, 1) は同じ辺として扱われていたが、DiGraphillion では異なる辺として扱われる
+- 自己ループ、多重辺には未対応 (誤った解が出力される)
+- Graphillion と同じプログラム中で使用可能 (see also `graphillion/test/test_graphillion.py`) だが、`GraphSet` と `DiGraphSet` に互換性は無い
+
 ## 機能追加手順
 
 see also [Graphillion Developers Guide](https://hackmd.io/@yamazaki2021/BJbLdp5au).

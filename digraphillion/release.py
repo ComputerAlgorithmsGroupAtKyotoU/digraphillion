@@ -20,4 +20,4 @@
 
 version = '0.9.1'
 data = ''
-authors = (('Computer Algorithm Group At Kyoto University', 'example@example.com'))
+authors = (('Computer Algorithm Group At Kyoto University', 'webmaster@algo.cce.i.kyoto-u.ac.jp'))

@@ -1,5 +1,11 @@
 # DiGraphillion
 
+## What is DiGraphillion?
+
+DiGraphillion is a Python software package on search, optimization, and enumeration for a *directed* graphset, or a set of *digraphs*.
+
+see also [Graphillion](https://github.com/takemaru/graphillion#installing).
+
 ## Installing
 
 ### Requirements
@@ -14,19 +20,35 @@
 
 ### Installing from source
 
-GitHub repository
+#### GitHub repository
 
 1. Clone the Graphillion repository `git clone https://github.com/ComputerAlgorithmsGroupAtKyotoU/digraphillion.git`
 2. Change directory to "digraphillion"
-3. Run python `setup.py` build to build
+3. Run python `setup.py build` to build
 4. (optional) Run `python setup.py test -q` to execute the tests
+  - `pip install -U graphillion` before testing.
 5. Run `sudo python setup.py install` to install
 
 ## How to use graphsets
 
-- see [Graphillion](https://github.com/takemaru/graphillion#installing)
+- see also [Graphillion](https://github.com/takemaru/graphillion#installing).
 
-## Methods for digraph
+### Terminology
+
+| Term            | Description                   | Example                                            |
+|:----------------|:------------------------------|:---------------------------------------------------|
+| vertex          | any hashable object           | `1`, `'v1'`, `(x, y)`                              |
+| directed edge   | tuple of vertices             | `(1, 2)`, `(2, 1)`                                 |
+| digraph         | list of directed edges        | `[(1, 2), (2, 1), (1, 3)]`                           |
+| set of digraphs | DiGraphSet object             | `DiGraphSet([[(1, 2), (1, 3)], [(1, 2), (2, 1)]])` |
+
+- the order of vertices is important.
+  - directed edge `(1, 2)` is not equal to `(2, 1)`.
+- self-loop edges and multiedges are *NOT* supported. Incorrect solutions may be obtained.
+- You can use `GraphSet` with `DiGraphSet` in the same program. However, `GraphSet` and `DiGraphSet` are incompatible.
+  - see also `digraphillion/test/test_digraphillion.py`.
+
+### Methods for digraph
 
 | Method                                                     | Description                                                                |
 | :--------------------------------------------------------- | :------------------------------------------------------------------------- |
