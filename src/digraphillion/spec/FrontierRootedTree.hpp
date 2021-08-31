@@ -185,10 +185,14 @@ class FrontierRootedTreeSpec
           return 0;
         }
         // the out-degdee of root node must not be 0.
-        if (getOutdeg(data, v) == 0) {
+        // if (getOutdeg(data, v) == 0) {
+        //  return 0;
+        //}
+      } else {
+        // if v has no incoming edge, v cant have outgoing edges.
+        if (getIndeg(data, v) == 0 && getOutdeg(data, v) > 0) {
           return 0;
         }
-      } else {
         // in-degree of non-root node must be 0 or 1.
         if (getIndeg(data, v) > 1) {
           return 0;
@@ -274,7 +278,7 @@ class FrontierRootedTreeSpec
     }
     if (level == 1) {
       // If we come here, the edge set is empty (taking no edge).
-      return 0;
+      return -1;  // return the 1-terminal
     }
 
     assert(level - 1 > 0);

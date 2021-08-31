@@ -183,6 +183,9 @@ class TestDigraphillion(unittest.TestCase):
         gs = DiGraphSet.rooted_trees(root, is_spanning)
         gs.issubset(DiGraphSet.rooted_trees(root, True))
 
+        self.assertEqual(len(gs), 45)
+
+        self.assertTrue([] in gs)
         self.assertTrue([(1, 2)] in gs)
         self.assertTrue([(1, 2), (1, 4)] in gs)
         self.assertTrue([(1, 2), (1, 4), (4, 5)] in gs)
