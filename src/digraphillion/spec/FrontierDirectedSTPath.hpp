@@ -235,7 +235,7 @@ class FrontierDirectedSTPathSpec
               return -1;  // return the 1-terminal
             }
           } else {
-            if (level > s_entered_level_ || level > t_entered_level_) {
+            if (level >= s_entered_level_ || level >= t_entered_level_) {
               return 0;
             } else {
               return -1;  // return the 1-terminal

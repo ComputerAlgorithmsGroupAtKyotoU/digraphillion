@@ -64,6 +64,16 @@ class TestDigraphillion(unittest.TestCase):
         self.assertTrue([(1, 4), (4, 5)] not in gs)
         self.assertEqual(len(gs), 4)
 
+    def test_directed_st_paths_hand(self):
+        edges = [(1, 2), (1, 3), (1, 4), (2, 4), (3, 1)]
+        DiGraphSet.set_universe(edges)
+
+        s, t = 2, 4
+        gs = DiGraphSet.directed_st_paths(s, t, False)
+
+        self.assertTrue([(2, 4)] in gs)
+        self.assertEqual(len(gs), 1)
+
     def test_directed_st_hamiltonian_paths(self):
         DiGraphSet.set_universe(universe_edges)
         s, t = 1, 6
