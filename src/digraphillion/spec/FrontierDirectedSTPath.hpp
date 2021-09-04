@@ -199,6 +199,8 @@ class FrontierDirectedSTPathSpec
       bool comp_found = false;
       bool deg_found = false;
       bool frontier_exists = false;
+      // there is a endpoint on the remaind frontier.
+      bool endpoint_exists = false;
       // Search a vertex that has the component number same as that of v.
       // Also check whether a vertex whose degree is at least 1 exists
       // on the frontier.
@@ -228,7 +230,10 @@ class FrontierDirectedSTPathSpec
         if (getIndeg(data, w) > 0 || getOutdeg(data, w) > 0) {
           deg_found = true;
         }
-        if (deg_found && comp_found) {
+        if (w == s_ || w == t_) {
+          endpoint_exists = true;
+        }
+        if (deg_found && comp_found && endpoint_exists) {
           break;
         }
       }
@@ -243,7 +248,8 @@ class FrontierDirectedSTPathSpec
         // That is, the generated subgraph is not connected.
         // Then, we return the 0-terminal.
         assert(getIndeg(data, v) <= 1 && getOutdeg(data, v) <= 1);
-        if (getIndeg(data, v) + getOutdeg(data, v) > 0 && deg_found) {
+        if (getIndeg(data, v) + getOutdeg(data, v) > 0 &&
+            (deg_found || endpoint_exists)) {
           return 0;  // return the 0-terminal.
         } else if (getIndeg(data, v) + getOutdeg(data, v) >
                    0) {  // If deg of v is 2,
