@@ -96,14 +96,6 @@ class FrontierDirectedSTPathSpec
     return m_ - fm_.getVerticesEnteringLevel(v);
   }
 
-  int computeMinEnteredLevel() const {
-    int minLevel = graph_.edgeSize();
-    for (int v = 1; v <= graph_.vertexSize(); v++) {
-      minLevel = std::min(minLevel, computeEnteredLevel(v));
-    }
-    return minLevel;
-  }
-
  public:
   FrontierDirectedSTPathSpec(const tdzdd::Digraph& graph, bool isHamiltonian,
                              short s, short t)
@@ -116,7 +108,7 @@ class FrontierDirectedSTPathSpec
         fm_(graph_),
         s_entered_level_(computeEnteredLevel(s)),
         t_entered_level_(computeEnteredLevel(t)),
-        min_entered_level_(computeMinEnteredLevel()) {
+        min_entered_level_(m_ - fm_.getAllVerticesEnteringLevel()) {
     if (graph_.vertexSize() > SHRT_MAX) {  // SHRT_MAX == 32767
       std::cerr << "The number of vertices should be at most " << SHRT_MAX
                 << std::endl;
