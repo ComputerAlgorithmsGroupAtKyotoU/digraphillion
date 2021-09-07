@@ -120,6 +120,16 @@ class TestDigraphillion(unittest.TestCase):
         self.assertTrue(t_to_s in gs)
         self.assertEqual(len(gs), 1)
 
+    def test_directed_st_hamiltonian_paths_hack1(self):
+        edges = [(1, 2), (3, 4)]
+        DiGraphSet.set_universe(edges)
+
+        s, t = 1, 2
+        gs = DiGraphSet.directed_st_paths(s, t, is_hamiltonian=True)
+        for gg in gs:
+            print(gg)
+        self.assertEqual(len(gs), 0)
+
     def test_hamiltonian_path_in_paths(self):
         DiGraphSet.set_universe(universe_edges)
         for s in range(1, 7):
@@ -312,6 +322,7 @@ class TestDigraphillion(unittest.TestCase):
 
         self.assertTrue([(1, 2), (1, 4), (4, 5), (5, 6), (2, 3)] in trees_dg)
         self.assertTrue([(1, 2), (2, 5), (5, 4), (4, 1)] not in trees_dg)
+
 
 if __name__ == '__main__':
     unittest.main()

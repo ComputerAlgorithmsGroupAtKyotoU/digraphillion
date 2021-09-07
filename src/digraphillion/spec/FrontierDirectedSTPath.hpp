@@ -54,6 +54,7 @@ class FrontierDirectedSTPathSpec
 
   const int s_entered_level_;
   const int t_entered_level_;
+  const int min_entered_level_;
 
   // This function gets deg of v.
   short getIndeg(DirectedFrontierData* data, short v) const {
@@ -106,7 +107,8 @@ class FrontierDirectedSTPathSpec
         t_(t),
         fm_(graph_),
         s_entered_level_(computeEnteredLevel(s)),
-        t_entered_level_(computeEnteredLevel(t)) {
+        t_entered_level_(computeEnteredLevel(t)),
+        min_entered_level_(m_ - fm_.getAllVerticesEnteringLevel()) {
     if (graph_.vertexSize() > SHRT_MAX) {  // SHRT_MAX == 32767
       std::cerr << "The number of vertices should be at most " << SHRT_MAX
                 << std::endl;
@@ -257,6 +259,10 @@ class FrontierDirectedSTPathSpec
           // a single cycle is completed.
           // Then, we return the 1-terminal.
           if (isHamiltonian_) {
+            // unconnected vertices remain.
+            if (level > min_entered_level_) {
+              return 0;
+            }
             if (frontier_exists) {
               return 0;
             } else {
